@@ -1,0 +1,92 @@
+@model ActiveRulesPageViewModel
+@{
+    ViewData["Title"] = "Active Rules";
+}
+
+<section class="hero-panel">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Active Rules</h1>
+        <p class="muted hero-copy">Review the UniFi rules created by UnifiPlus for uplink switching and bandwidth limiting, then remove entries that are no longer needed.</p>
+    </div>
+    <div class="hero-badge">
+        <span>Rule types</span>
+        <strong>Uplink-Switch / Bandwidth-Limiter</strong>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="@(Model.StatusIsSuccess ? "flash-success" : "flash-error")">@Model.StatusMessage</div>
+}
+
+<section class="card card-strong">
+    <div class="section-head">
+        <div>
+            <p class="eyebrow">UniFi rules</p>
+            <h2>Active UnifiPlus rules</h2>
+        </div>
+        <span class="badge">@Model.Rules.Count</span>
+    </div>
+
+    @if (Model.Rules.Count == 0)
+    {
+        <div class="empty-state">
+            <h3>No active UnifiPlus rules found</h3>
+            <p class="muted">As soon as an uplink switch or bandwidth limit is created through UnifiPlus, it will appear here.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Configuration</th>
+                        <th>Targets</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var rule in Model.Rules)
+                    {
+                        <tr>
+                            <td>
+                                <div class="table-title">@rule.Name</div>
+                            </td>
+                            <td>@rule.Type</td>
+                            <td>@rule.Configuration</td>
+                            <td>@rule.TargetDeviceCount</td>
+                            <td>
+                                <div class="table-copy">@(!string.IsNullOrWhiteSpace(rule.Description) ? rule.Description : "-")</div>
+                            </td>
+                            <td>
+                                <div class="table-actions">
+                                    <form asp-action="DeleteRule" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="ruleId" value="@rule.Id" />
+                                        <button type="submit" class="action-button action-button-danger">
+                                            <span class="action-icon" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M3 6h18"></path>
+                                                    <path d="M8 6V4h8v2"></path>
+                                                    <path d="M19 6l-1 14H6L5 6"></path>
+                                                    <path d="M10 11v6"></path>
+                                                    <path d="M14 11v6"></path>
+                                                </svg>
+                                            </span>
+                                            <span class="action-label">Delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

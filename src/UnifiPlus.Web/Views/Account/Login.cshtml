@@ -1,0 +1,26 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<section class="card narrow">
+    <div class="login-brand">
+        <img src="~/assets/unifiplus-logo.svg" alt="UnifiPlus" class="login-logo" />
+        <div>
+            <p class="eyebrow">Local Identity</p>
+            <h1>Sign in to UnifiPlus</h1>
+        </div>
+    </div>
+    <p class="muted">Sign in with your existing local account. On a fresh install, the setup wizard creates the first administrator before this screen is used.</p>
+
+    <form asp-action="Login" method="post" class="stack">
+        <div asp-validation-summary="ModelOnly" class="validation"></div>
+        <label asp-for="UserId"></label>
+        <input asp-for="UserId" />
+
+        <label asp-for="Password"></label>
+        <input asp-for="Password" />
+
+        <button type="submit">Sign in</button>
+    </form>
+</section>

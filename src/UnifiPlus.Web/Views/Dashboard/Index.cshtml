@@ -1,0 +1,439 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Uplink Switcher";
+}
+
+<section class="hero-panel hero-panel-dashboard">
+    <div>
+        <p class="eyebrow">UniFi policy control</p>
+        <h1>Uplink Switcher</h1>
+        <p class="muted hero-copy">Search through your live UniFi clients, open assigned devices instantly and switch them between detected uplinks.</p>
+    </div>
+    <div class="hero-badge">
+        <span>Policy Prefix</span>
+        <strong>UP-@Model.UserId-*</strong>
+    </div>
+    <div class="hero-badge">
+        <span>My clients</span>
+        <strong>@Model.AssignedClients.Count</strong>
+    </div>
+    @if (Model.IsAdmin)
+    {
+        <div class="hero-badge">
+            <span>All clients</span>
+            <strong>@Model.AllClients.Count</strong>
+        </div>
+    }
+</section>
+
+@if (TempData["ActionStatus"] is string actionStatus)
+{
+    <div class="flash-success">@actionStatus</div>
+}
+
+@if (TempData["ActionError"] is string actionError)
+{
+    <div class="flash-error">@actionError</div>
+}
+
+<section class="content-stack">
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Live uplinks</p>
+                <h2>Detected UniFi uplinks</h2>
+            </div>
+        </div>
+
+        @if (Model.AvailableWans.Count == 0)
+        {
+            <p class="muted">No live UniFi uplinks are currently available. Check the UniFi connection settings first.</p>
+        }
+        else
+        {
+            <div class="mini-stat-grid">
+                @foreach (var uplink in Model.AvailableWans)
+                {
+                    <div class="mini-stat">
+                        <span>@(uplink.IsActive ? "Active uplink" : "Available uplink")</span>
+                        <strong>@uplink.Name</strong>
+                    </div>
+                }
+            </div>
+        }
+    </article>
+
+    <article class="card card-strong">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Live clients</p>
+                <h2>Client browser</h2>
+            </div>
+        </div>
+
+        <div class="tab-group" data-tab-group>
+            <div class="tab-bar" role="tablist" aria-label="Client views">
+                <button type="button" class="tab-button active" data-tab-button="my-clients" role="tab" aria-selected="true">My Clients</button>
+                @if (Model.IsAdmin)
+                {
+                    <button type="button" class="tab-button" data-tab-button="all-clients" role="tab" aria-selected="false">All Clients</button>
+                }
+            </div>
+
+            <div class="tab-panel" data-tab-panel="my-clients">
+                <div class="device-catalog" data-device-catalog data-page-size="6">
+                    <div class="device-toolbar">
+                        <label class="device-search">
+                            <span class="muted">Search</span>
+                            <input type="text" placeholder="Name, hostname, IP, MAC, policy" data-device-search />
+                        </label>
+
+                        <label class="device-filter">
+                            <span class="muted">Connection</span>
+                            <select data-device-filter="connection">
+                                <option value="all">All</option>
+                                <option value="wired">Wired</option>
+                                <option value="wifi">WiFi</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </label>
+
+                        <label class="device-filter">
+                            <span class="muted">Online</span>
+                            <select data-device-filter="online">
+                                <option value="all">All</option>
+                                <option value="online">Online</option>
+                                <option value="offline">Offline</option>
+                            </select>
+                        </label>
+
+                        <label class="device-filter device-page-size">
+                            <span class="muted">Per page</span>
+                            <select data-device-page-size>
+                                <option value="6" selected="selected">6</option>
+                                <option value="12">12</option>
+                                <option value="24">24</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="device-toolbar device-toolbar-secondary">
+                        <div class="muted" data-device-count>@Model.AssignedClients.Count client(s)</div>
+                    </div>
+
+                    <div class="record-list" data-device-results>
+                        @if (Model.AssignedClients.Count == 0)
+                        {
+                            <div class="empty-state">
+                                <h3>No assigned UniFi clients available</h3>
+                                <p class="muted">Either no client assignment exists yet, or UniFi did not return any matching live client data.</p>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var client in Model.AssignedClients)
+                            {
+                                var connectionType = string.IsNullOrWhiteSpace(client.ConnectionType) ? "other" : client.ConnectionType.ToLowerInvariant();
+                                var search = string.Join(" ", new[]
+                                {
+                                    client.ClientName,
+                                    client.Hostname ?? string.Empty,
+                                    client.IpAddress ?? string.Empty,
+                                    client.MacAddress ?? string.Empty,
+                                    client.Manufacturer ?? string.Empty,
+                                    client.PolicyName ?? string.Empty,
+                                    client.ActiveWanName ?? string.Empty
+                                }.Where(value => !string.IsNullOrWhiteSpace(value))).ToLowerInvariant();
+
+                                <div class="record-card"
+                                     data-device-item
+                                     data-status="assigned"
+                                     data-connection="@connectionType"
+                                     data-online="@(client.IsOnline ? "online" : "offline")"
+                                     data-search="@search">
+                                    <div class="record-header">
+                                        <div class="record-title">
+                                            <strong>@(string.IsNullOrWhiteSpace(client.AliasName) ? client.ClientName : client.AliasName)</strong>
+                                            @if (!string.IsNullOrWhiteSpace(client.AliasName))
+                                            {
+                                                <div class="record-note">Real name: @client.ClientName</div>
+                                            }
+                                            <div class="record-meta">
+                                                <span>IP: @client.IpAddress</span>
+                                                @if (!string.IsNullOrWhiteSpace(client.Hostname))
+                                                {
+                                                    <span>Host: @client.Hostname</span>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(client.MacAddress))
+                                                {
+                                                    <span>MAC: @client.MacAddress</span>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(client.Manufacturer))
+                                                {
+                                                    <span>Vendor: @client.Manufacturer</span>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(client.ConnectionType))
+                                                {
+                                                    <span>@client.ConnectionType</span>
+                                                }
+                                                <span>@(client.IsOnline ? "Online" : "Offline")</span>
+                                                @if (client.LastSeenUtc.HasValue)
+                                                {
+                                                    <span>Seen: @client.LastSeenUtc.Value.ToLocalTime().ToString("g")</span>
+                                                }
+                                                <span>Current uplink: @client.ActiveWanName</span>
+                                            </div>
+                                        </div>
+                                        <span class="badge">@client.PolicyName</span>
+                                    </div>
+
+                                    @if (client.AvailableWans.Count == 0)
+                                    {
+                                        <div class="record-body">
+                                            <div class="record-note">No live UniFi uplinks detected.</div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="UpdateWan" method="post" class="stack">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="ClientId" value="@client.ClientId" />
+                                            <div class="record-body">
+                                                <div class="record-field">
+                                                    <label for="uplink-@client.ClientId">Uplink</label>
+                                                    <select id="uplink-@client.ClientId" name="WanId">
+                                                        @foreach (var uplink in client.AvailableWans)
+                                                        {
+                                                            if (uplink.Id == client.ActiveWanId)
+                                                            {
+                                                                <option value="@uplink.Id" selected="selected">@uplink.Name</option>
+                                                            }
+                                                            else
+                                                            {
+                                                                <option value="@uplink.Id">@uplink.Name</option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="card-actions card-actions-end">
+                                                <button type="submit" class="action-button">
+                                                    <span class="action-icon" aria-hidden="true">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M13 5l7 7-7 7"></path>
+                                                            <path d="M5 12h15"></path>
+                                                        </svg>
+                                                    </span>
+                                                    <span class="action-label">Apply switch</span>
+                                                </button>
+                                            </div>
+                                        </form>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <div class="card-actions">
+                        <div class="muted" data-device-page-label>Page 1</div>
+                        <div class="actions-inline">
+                            <button type="button" class="icon-link strong-ghost" data-device-prev>
+                                <span class="action-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M15 18l-6-6 6-6"></path>
+                                    </svg>
+                                </span>
+                                <span class="action-label">Previous</span>
+                            </button>
+                            <button type="button" class="icon-link strong-ghost" data-device-next>
+                                <span class="action-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 18l6-6-6-6"></path>
+                                    </svg>
+                                </span>
+                                <span class="action-label">Next</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.IsAdmin)
+            {
+                <div class="tab-panel is-hidden" data-tab-panel="all-clients">
+                    <div class="device-catalog" data-device-catalog data-page-size="10">
+                        <div class="device-toolbar">
+                            <label class="device-search">
+                                <span class="muted">Search</span>
+                                <input type="text" placeholder="Name, hostname, IP, MAC, vendor" data-device-search />
+                            </label>
+
+                            <label class="device-filter">
+                                <span class="muted">Status</span>
+                                <select data-device-filter="status">
+                                    <option value="all">All</option>
+                                    <option value="assigned">Assigned</option>
+                                    <option value="claimable">Unassigned</option>
+                                </select>
+                            </label>
+
+                            <label class="device-filter">
+                                <span class="muted">Connection</span>
+                                <select data-device-filter="connection">
+                                    <option value="all">All</option>
+                                    <option value="wired">Wired</option>
+                                    <option value="wifi">WiFi</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </label>
+
+                            <label class="device-filter">
+                                <span class="muted">Online</span>
+                                <select data-device-filter="online">
+                                    <option value="all">All</option>
+                                    <option value="online">Online</option>
+                                    <option value="offline">Offline</option>
+                                </select>
+                            </label>
+
+                            <label class="device-filter device-page-size">
+                                <span class="muted">Per page</span>
+                                <select data-device-page-size>
+                                    <option value="10" selected="selected">10</option>
+                                    <option value="20">20</option>
+                                    <option value="40">40</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="device-toolbar device-toolbar-secondary">
+                            <div class="muted" data-device-count>@Model.AllClients.Count client(s)</div>
+                        </div>
+
+                        <div class="table-wrap" data-device-results>
+                            <table class="data-table dashboard-client-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Host</th>
+                                        <th>IP</th>
+                                        <th>MAC</th>
+                                        <th>Vendor</th>
+                                        <th>Connection</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.AllClients.Count == 0)
+                                    {
+                                        <tr>
+                                            <td colspan="8" class="table-copy">No live UniFi clients were returned by the current connection.</td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var client in Model.AllClients)
+                                        {
+                                            var connectionType = string.IsNullOrWhiteSpace(client.ConnectionType) ? "other" : client.ConnectionType.ToLowerInvariant();
+                                            var search = string.Join(" ", new[]
+                                            {
+                                                client.Name,
+                                                client.Hostname ?? string.Empty,
+                                                client.IpAddress ?? string.Empty,
+                                                client.MacAddress ?? string.Empty,
+                                                client.Manufacturer ?? string.Empty,
+                                                client.PolicyName ?? string.Empty
+                                            }.Where(value => !string.IsNullOrWhiteSpace(value))).ToLowerInvariant();
+
+                                            <tr data-device-item
+                                                data-status="@(client.AssignedToCurrentUser ? "assigned" : "claimable")"
+                                                data-connection="@connectionType"
+                                                data-online="@(client.IsOnline ? "online" : "offline")"
+                                                data-search="@search">
+                                                <td>
+                                                    <div class="table-title">@(string.IsNullOrWhiteSpace(client.AliasName) ? client.Name : client.AliasName)</div>
+                                                    @if (!string.IsNullOrWhiteSpace(client.AliasName))
+                                                    {
+                                                        <div class="table-copy">Real name: @client.Name</div>
+                                                    }
+                                                </td>
+                                                <td>@(string.IsNullOrWhiteSpace(client.Hostname) ? "-" : client.Hostname)</td>
+                                                <td>@(string.IsNullOrWhiteSpace(client.IpAddress) ? "-" : client.IpAddress)</td>
+                                                <td>@(string.IsNullOrWhiteSpace(client.MacAddress) ? "-" : client.MacAddress)</td>
+                                                <td>@(string.IsNullOrWhiteSpace(client.Manufacturer) ? "-" : client.Manufacturer)</td>
+                                                <td>@(string.IsNullOrWhiteSpace(client.ConnectionType) ? "-" : client.ConnectionType)</td>
+                                                <td>
+                                                    @if (client.AssignedToCurrentUser)
+                                                    {
+                                                        <span class="badge">Assigned</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="muted">Available</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @if (!client.AssignedToCurrentUser)
+                                                    {
+                                                        <form asp-action="Assign" method="post">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="ClientId" value="@client.Id" />
+                                                            <button type="submit" class="action-button action-button-small">
+                                                                <span class="action-icon" aria-hidden="true">
+                                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                        <path d="M12 5v14"></path>
+                                                                        <path d="M5 12h14"></path>
+                                                                    </svg>
+                                                                </span>
+                                                                <span class="action-label">Assign</span>
+                                                            </button>
+                                                        </form>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="card-actions">
+                            <div class="muted" data-device-page-label>Page 1</div>
+                            <div class="actions-inline">
+                                <button type="button" class="icon-link strong-ghost" data-device-prev>
+                                    <span class="action-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M15 18l-6-6 6-6"></path>
+                                        </svg>
+                                    </span>
+                                    <span class="action-label">Previous</span>
+                                </button>
+                                <button type="button" class="icon-link strong-ghost" data-device-next>
+                                    <span class="action-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M9 18l6-6-6-6"></path>
+                                        </svg>
+                                    </span>
+                                    <span class="action-label">Next</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="card-actions">
+            <a asp-controller="Account" asp-action="Manage" class="icon-link strong-ghost">
+                <span class="action-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21a8 8 0 0 0-16 0"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </span>
+                <span class="action-label">Manage in Account</span>
+            </a>
+        </div>
+    </article>
+</section>

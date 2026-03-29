@@ -1,0 +1,150 @@
+@model HomeDashboardViewModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<section class="hero-panel hero-panel-dashboard">
+    <div>
+        <p class="eyebrow">Overview</p>
+        <h1>Welcome back, @Model.UserId</h1>
+        <p class="muted hero-copy">Keep an eye on your UniFi uplinks, clients and active rules from one compact dashboard.</p>
+    </div>
+    <div class="hero-badge">
+        <span>Role</span>
+        <strong>@(Model.IsAdmin ? "Administrator" : "User")</strong>
+    </div>
+</section>
+
+<section class="content-stack">
+    <article class="card card-strong">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">At a glance</p>
+                <h2>Dashboard</h2>
+            </div>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-tile">
+                <span>Detected uplinks</span>
+                <strong>@Model.UplinkCount</strong>
+            </div>
+            <div class="summary-tile">
+                <span>My clients</span>
+                <strong>@Model.AssignedClientCount</strong>
+            </div>
+            <div class="summary-tile">
+                <span>All clients</span>
+                <strong>@Model.TotalClientCount</strong>
+            </div>
+            @if (Model.IsAdmin)
+            {
+                <div class="summary-tile">
+                    <span>Active rules</span>
+                    <strong>@Model.ActiveRuleCount</strong>
+                </div>
+            }
+        </div>
+    </article>
+
+    <section class="grid">
+        <article class="card dashboard-action-card">
+            <div>
+                <p class="eyebrow">Traffic control</p>
+                <h2>Uplink Switcher</h2>
+                <p class="muted">Open your live client views, browse assigned devices and switch them between detected UniFi uplinks.</p>
+            </div>
+            <div class="card-actions">
+                <a asp-controller="Dashboard" asp-action="Index" class="icon-link strong-ghost">
+                    <span class="action-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M13 5l7 7-7 7"></path>
+                            <path d="M5 12h15"></path>
+                        </svg>
+                    </span>
+                    <span class="action-label">Open switcher</span>
+                </a>
+            </div>
+        </article>
+
+        <article class="card dashboard-action-card">
+            <div>
+                <p class="eyebrow">Traffic control</p>
+                <h2>Bandwidth Limiter</h2>
+                <p class="muted">Apply per-client upload and download limits through UniFi bandwidth profiles and keep them visible under Active Rules.</p>
+            </div>
+            <div class="card-actions">
+                <a asp-controller="Bandwidth" asp-action="Index" class="icon-link strong-ghost">
+                    <span class="action-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 19V5"></path>
+                            <path d="M5 12l7-7 7 7"></path>
+                        </svg>
+                    </span>
+                    <span class="action-label">Open limiter</span>
+                </a>
+            </div>
+        </article>
+
+        <article class="card dashboard-action-card">
+            <div>
+                <p class="eyebrow">Profile</p>
+                <h2>Account</h2>
+                <p class="muted">Manage your password, review your claimed clients and browse the live UniFi inventory.</p>
+            </div>
+            <div class="card-actions">
+                <a asp-controller="Account" asp-action="Manage" class="icon-link strong-ghost">
+                    <span class="action-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21a8 8 0 0 0-16 0"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </span>
+                    <span class="action-label">Open account</span>
+                </a>
+            </div>
+        </article>
+
+        @if (Model.IsAdmin)
+        {
+            <article class="card dashboard-action-card">
+                <div>
+                    <p class="eyebrow">Administration</p>
+                    <h2>UniFi Connection</h2>
+                    <p class="muted">Review saved connection settings, reload live discovery data and verify uplinks and clients from UniFi.</p>
+                </div>
+                <div class="card-actions">
+                    <a asp-controller="Admin" asp-action="Connection" class="icon-link strong-ghost">
+                        <span class="action-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 7h16"></path>
+                                <path d="M7 12h10"></path>
+                                <path d="M10 17h4"></path>
+                            </svg>
+                        </span>
+                        <span class="action-label">Open connection</span>
+                    </a>
+                </div>
+            </article>
+
+            <article class="card dashboard-action-card">
+                <div>
+                    <p class="eyebrow">Administration</p>
+                    <h2>Active Rules</h2>
+                    <p class="muted">Inspect active UnifiPlus rules and remove outdated uplink-switch routes when needed.</p>
+                </div>
+                <div class="card-actions">
+                    <a asp-controller="Admin" asp-action="Rules" class="icon-link strong-ghost">
+                        <span class="action-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 11l3 3L22 4"></path>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                            </svg>
+                        </span>
+                        <span class="action-label">Open rules</span>
+                    </a>
+                </div>
+            </article>
+        }
+    </section>
+</section>

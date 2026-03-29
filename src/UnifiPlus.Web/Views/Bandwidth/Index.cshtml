@@ -1,0 +1,117 @@
+@model BandwidthPageViewModel
+@{
+    ViewData["Title"] = "Bandwidth Limiter";
+}
+
+<section class="hero-panel hero-panel-dashboard">
+    <div>
+        <p class="eyebrow">Traffic control</p>
+        <h1>Bandwidth Limiter</h1>
+        <p class="muted hero-copy">Apply per-client upload and download limits through UniFi bandwidth profiles and keep them visible under Active Rules.</p>
+    </div>
+    <div class="hero-badge">
+        <span>Managed clients</span>
+        <strong>@Model.AssignedClients.Count</strong>
+    </div>
+</section>
+
+@if (TempData["ActionStatus"] is string actionStatus)
+{
+    <div class="flash-success">@actionStatus</div>
+}
+
+@if (TempData["ActionError"] is string actionError)
+{
+    <div class="flash-error">@actionError</div>
+}
+
+<section class="card card-strong">
+    <div class="section-head">
+        <div>
+            <p class="eyebrow">Assigned clients</p>
+            <h2>Bandwidth profiles</h2>
+        </div>
+    </div>
+
+    @if (Model.AssignedClients.Count == 0)
+    {
+        <div class="empty-state">
+            <h3>No assigned UniFi clients available</h3>
+            <p class="muted">Claim a client first before you apply a bandwidth limit.</p>
+        </div>
+    }
+    else
+    {
+        <div class="record-list">
+            @foreach (var client in Model.AssignedClients)
+            {
+                <div class="record-card">
+                    <div class="record-header">
+                        <div class="record-title">
+                            <strong>@(string.IsNullOrWhiteSpace(client.AliasName) ? client.ClientName : client.AliasName)</strong>
+                            @if (!string.IsNullOrWhiteSpace(client.AliasName))
+                            {
+                                <div class="record-note">Real name: @client.ClientName</div>
+                            }
+                            <div class="record-meta">
+                                <span>IP: @client.IpAddress</span>
+                                @if (!string.IsNullOrWhiteSpace(client.Hostname))
+                                {
+                                    <span>Host: @client.Hostname</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(client.MacAddress))
+                                {
+                                    <span>MAC: @client.MacAddress</span>
+                                }
+                                <span>@(client.IsOnline ? "Online" : "Offline")</span>
+                            </div>
+                        </div>
+                        <span class="badge">@client.PolicyName</span>
+                    </div>
+
+                    <div class="record-note">
+                        @if (client.DownloadLimitMbps.HasValue || client.UploadLimitMbps.HasValue)
+                        {
+                            <span>
+                                Current limit:
+                                @(client.DownloadLimitMbps.HasValue ? $"Down {client.DownloadLimitMbps.Value} Mbps" : "Down unlimited")
+                                /
+                                @(client.UploadLimitMbps.HasValue ? $"Up {client.UploadLimitMbps.Value} Mbps" : "Up unlimited")
+                            </span>
+                        }
+                        else
+                        {
+                            <span>No UnifiPlus bandwidth limit is currently active for this client.</span>
+                        }
+                    </div>
+
+                    <form asp-action="Update" method="post" class="stack">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="ClientId" value="@client.ClientId" />
+                        <div class="bandwidth-grid">
+                            <div class="record-field">
+                                <label for="download-@client.ClientId">Download limit (Mbps)</label>
+                                <input id="download-@client.ClientId" type="number" min="1" step="1" name="DownloadLimitMbps" value="@(client.DownloadLimitMbps?.ToString() ?? string.Empty)" />
+                            </div>
+                            <div class="record-field">
+                                <label for="upload-@client.ClientId">Upload limit (Mbps)</label>
+                                <input id="upload-@client.ClientId" type="number" min="1" step="1" name="UploadLimitMbps" value="@(client.UploadLimitMbps?.ToString() ?? string.Empty)" />
+                            </div>
+                        </div>
+                        <div class="card-actions card-actions-end">
+                            <button type="submit" class="action-button">
+                                <span class="action-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 19V5"></path>
+                                        <path d="M5 12l7-7 7 7"></path>
+                                    </svg>
+                                </span>
+                                <span class="action-label">Apply limit</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            }
+        </div>
+    }
+</section>

@@ -1,0 +1,62 @@
+@using UnifiPlus.Web.Authorization
+@model LocalUserCreateRequest
+@{
+    ViewData["Title"] = "Add User";
+}
+
+<section class="hero-panel">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Add user</h1>
+        <p class="muted hero-copy">Create a new local UnifiPlus account and assign the initial role before the user signs in.</p>
+    </div>
+</section>
+
+<section class="card card-strong narrow">
+    <div class="section-head">
+        <div>
+            <p class="eyebrow">Create</p>
+            <h2>New local user</h2>
+        </div>
+    </div>
+
+    <form asp-action="CreateUser" method="post" class="stack">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="validation"></div>
+
+        <label asp-for="UserId"></label>
+        <input asp-for="UserId" />
+
+        <label asp-for="Password"></label>
+        <input asp-for="Password" />
+
+        <label asp-for="ConfirmPassword"></label>
+        <input asp-for="ConfirmPassword" />
+
+        <label asp-for="Role"></label>
+        <select asp-for="Role">
+            <option value="@AppRoles.User">User</option>
+            <option value="@AppRoles.Admin">Admin</option>
+        </select>
+
+        <div class="card-actions">
+            <button type="submit" class="action-button">
+                <span class="action-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 6 9 17l-5-5"></path>
+                    </svg>
+                </span>
+                <span class="action-label">Create user</span>
+            </button>
+            <a asp-action="Users" class="icon-link strong-ghost">
+                <span class="action-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5"></path>
+                        <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                </span>
+                <span class="action-label">Cancel</span>
+            </a>
+        </div>
+    </form>
+</section>

@@ -1,0 +1,207 @@
+@model AdminSetupViewModel
+@{
+    ViewData["Title"] = "UniFi Connection";
+}
+
+<section class="hero-panel">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>UniFi connection</h1>
+        <p class="muted hero-copy">Review the current UniFi connection settings and open the dedicated edit page when you want to change them.</p>
+    </div>
+    <div class="hero-badge">
+        <span>Persistent store</span>
+        <strong>@Model.StoragePath</strong>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="@(Model.StatusIsSuccess ? "flash-success" : "flash-error")">@Model.StatusMessage</div>
+}
+
+@if (Model.LastTest is not null)
+{
+    <div class="@(Model.LastTest.Success ? "flash-success" : "flash-error")">@Model.LastTest.Message</div>
+}
+
+<section class="grid two-up">
+    <article class="card card-strong">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Connection</p>
+                <h2>Saved settings</h2>
+            </div>
+            @if (Model.HasSavedConfiguration)
+            {
+                <span class="badge">Saved</span>
+            }
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-tile">
+                <span>Base URL</span>
+                <strong>@(string.IsNullOrWhiteSpace(Model.Form.BaseUrl) ? "-" : Model.Form.BaseUrl)</strong>
+            </div>
+            <div class="summary-tile">
+                <span>Site</span>
+                <strong>@(string.IsNullOrWhiteSpace(Model.Form.Site) ? "-" : Model.Form.Site)</strong>
+            </div>
+            <div class="summary-tile">
+                <span>Username</span>
+                <strong>@(string.IsNullOrWhiteSpace(Model.Form.Username) ? "-" : Model.Form.Username)</strong>
+            </div>
+            <div class="summary-tile">
+                <span>Stored API key</span>
+                <strong>@(Model.HasStoredApiKey ? "Yes" : "No")</strong>
+            </div>
+            <div class="summary-tile">
+                <span>Stored password</span>
+                <strong>@(Model.HasStoredPassword ? "Yes" : "No")</strong>
+            </div>
+            <div class="summary-tile">
+                <span>Self-signed TLS</span>
+                <strong>@(Model.Form.AllowSelfSignedTls ? "Allowed" : "Disabled")</strong>
+            </div>
+            <div class="summary-tile">
+                <span>Last updated</span>
+                <strong>@(Model.LastUpdatedUtc?.ToLocalTime().ToString("g") ?? "Never")</strong>
+            </div>
+        </div>
+
+        <div class="card-actions">
+            <a asp-action="EditConnection" class="icon-link strong-ghost">
+                <span class="action-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                    </svg>
+                </span>
+                <span class="action-label">Edit connection</span>
+            </a>
+        </div>
+    </article>
+
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Live UniFi data</p>
+                <h2>Current discovery</h2>
+            </div>
+        </div>
+
+        <form asp-action="Test" method="post" class="stack">
+            @Html.AntiForgeryToken()
+            <input name="BaseUrl" type="hidden" value="@Model.Form.BaseUrl" />
+            <input name="Site" type="hidden" value="@Model.Form.Site" />
+            <input name="ApiKey" type="hidden" value="@Model.Form.ApiKey" />
+            <input name="Username" type="hidden" value="@Model.Form.Username" />
+            <input name="Password" type="hidden" value="@Model.Form.Password" />
+            <input name="AllowSelfSignedTls" type="hidden" value="@Model.Form.AllowSelfSignedTls.ToString().ToLowerInvariant()" />
+
+            <div class="connection-list">
+                <div class="connection-item">
+                    <span>Endpoint used</span>
+                    <strong>@(string.IsNullOrWhiteSpace(Model.LastTest?.EndpointUsed) ? "Not tested yet" : Model.LastTest.EndpointUsed)</strong>
+                </div>
+                <div class="connection-item">
+                    <span>Discovered sites</span>
+                    <strong>@(Model.LastTest is null ? "-" : string.Join(", ", Model.LastTest.Sites))</strong>
+                </div>
+                <div class="connection-item">
+                    <span>Clients / uplinks</span>
+                    <strong>@(Model.LastTest is null ? "-" : $"{Model.LastTest.ClientCount} / {Model.LastTest.WanCount}")</strong>
+                </div>
+                <div class="connection-item">
+                    <span>Uplink interfaces</span>
+                    <strong>@(Model.LastTest is null || Model.LastTest.WanNames.Count == 0 ? "-" : string.Join(", ", Model.LastTest.WanNames))</strong>
+                </div>
+            </div>
+
+            <div class="card-actions">
+                <button type="submit" class="action-button">
+                    <span class="action-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+                            <path d="M21 3v6h-6"></path>
+                        </svg>
+                    </span>
+                    <span class="action-label">Reload live data</span>
+                </button>
+            </div>
+        </form>
+    </article>
+</section>
+
+<section class="card">
+    <div class="section-head">
+        <div>
+            <p class="eyebrow">Recovery</p>
+            <h2>Rebuild local state from UniFi</h2>
+        </div>
+    </div>
+
+    <p class="muted">This scans UniFi for claimed devices and UnifiPlus-managed rules, then recreates missing local users with temporary passwords. Personal aliases stored only in UnifiPlus cannot be recovered from UniFi.</p>
+
+    <form asp-action="Recover" method="post" class="stack">
+        @Html.AntiForgeryToken()
+
+        @if (Model.RecoveryResult is not null)
+        {
+            <div class="summary-grid">
+                <div class="summary-tile">
+                    <span>Recovered users</span>
+                    <strong>@Model.RecoveryResult.Snapshot.UserIds.Count</strong>
+                </div>
+                <div class="summary-tile">
+                    <span>Claimed clients</span>
+                    <strong>@Model.RecoveryResult.Snapshot.ClaimedClientCount</strong>
+                </div>
+                <div class="summary-tile">
+                    <span>Uplink rules</span>
+                    <strong>@Model.RecoveryResult.Snapshot.UplinkRuleCount</strong>
+                </div>
+                <div class="summary-tile">
+                    <span>Bandwidth rules</span>
+                    <strong>@Model.RecoveryResult.Snapshot.BandwidthRuleCount</strong>
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Temporary password</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.RecoveryResult.Users)
+                        {
+                            <tr>
+                                <td>@user.UserId</td>
+                                <td>@user.Role</td>
+                                <td>@(user.AlreadyExisted ? "Already existed" : "Recovered")</td>
+                                <td>@(string.IsNullOrWhiteSpace(user.TemporaryPassword) ? "-" : user.TemporaryPassword)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <div class="card-actions">
+            <button type="submit" class="action-button">
+                <span class="action-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+                        <path d="M21 3v6h-6"></path>
+                    </svg>
+                </span>
+                <span class="action-label">Recover from UniFi</span>
+            </button>
+        </div>
+    </form>
+</section>

@@ -1,0 +1,73 @@
+@model UserManagementViewModel
+@{
+    ViewData["Title"] = "Users";
+}
+
+<section class="hero-panel">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>User management</h1>
+        <p class="muted hero-copy">Create local users, manage roles, reset passwords and remove accounts from the persistent UnifiPlus user store.</p>
+    </div>
+    <div class="hero-badge">
+        <span>Current admin</span>
+        <strong>@Model.CurrentUserId</strong>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="@(Model.StatusIsSuccess ? "flash-success" : "flash-error")">@Model.StatusMessage</div>
+}
+
+<section class="card">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Store</p>
+                <h2>Local accounts</h2>
+            </div>
+            <div class="actions-inline">
+                <span class="badge">@Model.Users.Count user(s)</span>
+                <a asp-action="AddUser" class="icon-link strong-ghost">
+                    <span class="action-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14"></path>
+                            <path d="M5 12h14"></path>
+                        </svg>
+                    </span>
+                    <span class="action-label">Add user</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="user-list">
+            @foreach (var user in Model.Users)
+            {
+                <div class="user-row">
+                    <div class="user-copy">
+                        <strong>@user.UserId</strong>
+                        <div class="user-meta">
+                            <span>Role: @user.Role</span>
+                            <span>Created: @user.CreatedUtc.ToLocalTime().ToString("g")</span>
+                            @if (user.IsCurrentUser)
+                            {
+                                <span>Current session</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="actions-inline">
+                        <span class="badge">@user.Role</span>
+                        <a asp-action="EditUser" asp-route-userId="@user.UserId" class="icon-link strong-ghost">
+                            <span class="action-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 20h9"></path>
+                                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                                </svg>
+                            </span>
+                            <span class="action-label">Edit user</span>
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+</section>

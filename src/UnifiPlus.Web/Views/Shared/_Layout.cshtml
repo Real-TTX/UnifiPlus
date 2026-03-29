@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - UnifiPlus</title>
+    <link rel="icon" type="image/svg+xml" href="~/assets/unifiplus-favicon.svg" />
+    <link rel="apple-touch-icon" href="~/assets/unifiplus-favicon.svg" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="app-shell" data-menu-shell>
+            <aside class="sidebar" data-sidebar>
+                <div class="sidebar-head">
+                    <a asp-controller="Home" asp-action="Index" class="brand brand-link">
+                        <img src="~/assets/unifiplus-logo.svg" alt="UnifiPlus" class="brand-mark" />
+                        <span>UnifiPlus</span>
+                    </a>
+                    <button type="button" class="icon-button mobile-only" data-menu-close aria-label="Close menu">
+                        <span></span>
+                        <span></span>
+                    </button>
+                </div>
+
+                <nav class="nav-list">
+                    <a asp-controller="Home" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : string.Empty)">
+                        <span class="nav-icon">H</span>
+                        <span>Home</span>
+                    </a>
+                    <a asp-controller="Dashboard" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : string.Empty)">
+                        <span class="nav-icon">U</span>
+                        <span>Uplink Switcher</span>
+                    </a>
+                    <a asp-controller="Bandwidth" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Bandwidth" ? "active" : string.Empty)">
+                        <span class="nav-icon">B</span>
+                        <span>Bandwidth Limiter</span>
+                    </a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <div class="nav-group-title">Administration</div>
+                        <a asp-controller="Admin" asp-action="Connection" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Connection" ? "active" : string.Empty)">
+                            <span class="nav-icon">U</span>
+                            <span>UniFi Connection</span>
+                        </a>
+                        <a asp-controller="Admin" asp-action="Rules" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Rules" ? "active" : string.Empty)">
+                            <span class="nav-icon">R</span>
+                            <span>Active Rules</span>
+                        </a>
+                        <a asp-controller="Admin" asp-action="Users" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "active" : string.Empty)">
+                            <span class="nav-icon">A</span>
+                            <span>Users</span>
+                        </a>
+                    }
+                </nav>
+            </aside>
+
+            <div class="backdrop" data-menu-close></div>
+
+            <div class="main-panel">
+                <header class="topbar">
+                    <div class="topbar-left">
+                        <button type="button" class="icon-button" data-menu-open aria-label="Open menu">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                        <div class="page-kicker">@ViewData["Title"]</div>
+                    </div>
+
+                    <div class="topbar-actions">
+                        <a asp-controller="Account" asp-action="Manage" class="account-button" aria-label="Account">
+                            <span class="account-avatar">@User.Identity?.Name?.Substring(0, 1).ToUpperInvariant()</span>
+                            <span class="account-copy">
+                                <strong>Account</strong>
+                                <small>@User.Identity?.Name</small>
+                            </span>
+                        </a>
+
+                        <form asp-controller="Account" asp-action="Logout" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="ghost-button">Logout</button>
+                        </form>
+                    </div>
+                </header>
+
+                <main class="shell">
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
+    }
+    else
+    {
+        <header class="login-topbar">
+            <a asp-controller="Account" asp-action="Login" class="brand brand-link">
+                <img src="~/assets/unifiplus-logo.svg" alt="UnifiPlus" class="brand-mark" />
+                <span>UnifiPlus</span>
+            </a>
+        </header>
+
+        <main class="shell auth-shell">
+            @RenderBody()
+        </main>
+    }
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+</body>
+</html>

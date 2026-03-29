@@ -1,0 +1,168 @@
+@using UnifiPlus.Web.Authorization
+@model UserEditViewModel
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<section class="hero-panel">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Edit user</h1>
+        <p class="muted hero-copy">Manage role, password and account lifecycle for this local UnifiPlus user.</p>
+    </div>
+    <div class="hero-badge">
+        <span>User</span>
+        <strong>@Model.User.UserId</strong>
+        <span class="hero-secondary">@Model.User.Role</span>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="@(Model.StatusIsSuccess ? "flash-success" : "flash-error")">@Model.StatusMessage</div>
+}
+
+<section class="grid two-up">
+    <article class="card card-strong">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Profile</p>
+                <h2>User details</h2>
+            </div>
+        </div>
+
+        <div class="meta-list">
+            <div>
+                <span class="muted">User ID</span>
+                <strong>@Model.User.UserId</strong>
+            </div>
+            <div>
+                <span class="muted">Role</span>
+                <strong>@Model.User.Role</strong>
+            </div>
+            <div>
+                <span class="muted">Created</span>
+                <strong>@Model.User.CreatedUtc.ToLocalTime().ToString("g")</strong>
+            </div>
+            <div>
+                <span class="muted">Current session</span>
+                <strong>@(Model.User.IsCurrentUser ? "Yes" : "No")</strong>
+            </div>
+        </div>
+
+        <div class="surface-note" style="margin-top: 1.25rem;">
+            Role updates and password resets are managed from the panels on the right. Destructive actions stay separated below.
+        </div>
+
+        <div class="card-actions">
+            <a asp-action="Users" class="icon-link strong-ghost">
+                <span class="action-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5"></path>
+                        <path d="M12 19l-7-7 7-7"></path>
+                    </svg>
+                </span>
+                <span class="action-label">Cancel</span>
+            </a>
+        </div>
+    </article>
+
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Role</p>
+                <h2>Permissions</h2>
+            </div>
+        </div>
+
+        <form asp-action="UpdateUserRole" method="post" class="stack compact-form">
+            @Html.AntiForgeryToken()
+            <input asp-for="RoleForm.UserId" type="hidden" />
+
+            <label asp-for="RoleForm.Role"></label>
+            <select asp-for="RoleForm.Role">
+                <option value="@AppRoles.User">User</option>
+                <option value="@AppRoles.Admin">Admin</option>
+            </select>
+
+            <div class="card-actions">
+                <button type="submit" class="action-button">
+                    <span class="action-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 6 9 17l-5-5"></path>
+                        </svg>
+                    </span>
+                    <span class="action-label">Save role</span>
+                </button>
+            </div>
+        </form>
+    </article>
+</section>
+
+<section class="grid two-up">
+    <article class="card card-strong">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Security</p>
+                <h2>Password access</h2>
+            </div>
+        </div>
+
+        <p class="muted">Set a fresh local password for this account. The new password replaces the old one immediately.</p>
+
+        <form asp-action="ResetUserPassword" method="post" class="stack compact-form">
+            @Html.AntiForgeryToken()
+            <input asp-for="PasswordForm.UserId" type="hidden" />
+
+            <label asp-for="PasswordForm.NewPassword"></label>
+            <input asp-for="PasswordForm.NewPassword" />
+
+            <label asp-for="PasswordForm.ConfirmPassword"></label>
+            <input asp-for="PasswordForm.ConfirmPassword" />
+
+            <div class="card-actions">
+                <button type="submit" class="action-button">
+                    <span class="action-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </span>
+                    <span class="action-label">Set new password</span>
+                </button>
+            </div>
+        </form>
+    </article>
+
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Danger zone</p>
+                <h2>Delete account</h2>
+            </div>
+        </div>
+
+        <div class="danger-panel">
+            <p class="muted">Delete this local user account from the persistent UnifiPlus store. This action cannot be undone.</p>
+
+            <form asp-action="DeleteUser" method="post" class="stack compact-form">
+                @Html.AntiForgeryToken()
+                <input asp-for="DeleteForm.UserId" type="hidden" />
+                <div class="card-actions">
+                    <button type="submit" class="action-button action-button-danger">
+                        <span class="action-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18"></path>
+                                <path d="M8 6V4h8v2"></path>
+                                <path d="M19 6l-1 14H6L5 6"></path>
+                                <path d="M10 11v6"></path>
+                                <path d="M14 11v6"></path>
+                            </svg>
+                        </span>
+                        <span class="action-label">Delete user</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </article>
+</section>

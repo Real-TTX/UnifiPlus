@@ -1,0 +1,129 @@
+@model AdminSetupViewModel
+@{
+    ViewData["Title"] = "UniFi Connection";
+}
+
+<section class="hero-panel">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>Edit UniFi connection</h1>
+        <p class="muted hero-copy">Update the saved UniFi endpoint here. After saving, you will return to the connection overview.</p>
+    </div>
+    <div class="hero-badge">
+        <span>Persistent store</span>
+        <strong>@Model.StoragePath</strong>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="@(Model.StatusIsSuccess ? "flash-success" : "flash-error")">@Model.StatusMessage</div>
+}
+
+@if (Model.LastTest is not null)
+{
+    <div class="@(Model.LastTest.Success ? "flash-success" : "flash-error")">@Model.LastTest.Message</div>
+}
+
+<section class="grid two-up">
+    <article class="card card-strong">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Edit</p>
+                <h2>Connection settings</h2>
+            </div>
+            @if (Model.HasSavedConfiguration)
+            {
+                <span class="badge">Saved</span>
+            }
+        </div>
+
+        <form asp-action="Save" method="post" class="stack">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="validation"></div>
+
+            <div class="info-panel">
+                <strong>Authentication</strong>
+                <p class="muted">Recommended: API key. Fallback: Username and Password. You only need one of these options.</p>
+                <div class="secret-state">
+                    <span>Stored API key: <strong>@(Model.HasStoredApiKey ? "yes" : "no")</strong></span>
+                    <span>Stored password: <strong>@(Model.HasStoredPassword ? "yes" : "no")</strong></span>
+                </div>
+            </div>
+
+            <label for="BaseUrl">UniFi base URL</label>
+            <input id="BaseUrl" name="BaseUrl" type="text" value="@Model.Form.BaseUrl" />
+            <div class="field-hint">Example: `https://10.10.0.1`</div>
+
+            <label for="Site">Site name</label>
+            <input id="Site" name="Site" type="text" value="@Model.Form.Site" />
+            <div class="field-hint">Usually `default` unless your UniFi setup uses a different site name.</div>
+
+            <label for="ApiKey">API key</label>
+            <input id="ApiKey" name="ApiKey" type="text" value="@Model.Form.ApiKey" />
+            <div class="field-hint">Optional. If you provide an API key, Username and Password can stay empty. Leave blank to keep the stored key.</div>
+
+            <label for="Username">Username</label>
+            <input id="Username" name="Username" type="text" value="@Model.Form.Username" />
+            <div class="field-hint">Optional fallback when no API key is available.</div>
+
+            <label for="Password">Password</label>
+            <input id="Password" name="Password" type="password" value="" />
+            <div class="field-hint">Used together with Username when no API key is available. Leave blank to keep the stored password.</div>
+
+            <label class="checkbox-row">
+                <input name="AllowSelfSignedTls" type="checkbox" value="true" @(Model.Form.AllowSelfSignedTls ? "checked=\"checked\"" : null) />
+                <input name="AllowSelfSignedTls" type="hidden" value="false" />
+                <span>Allow self-signed TLS while testing local UniFi installations</span>
+            </label>
+
+            <div class="card-actions">
+                <button type="submit" class="action-button">
+                    <span class="action-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 6 9 17l-5-5"></path>
+                        </svg>
+                    </span>
+                    <span class="action-label">Save configuration</span>
+                </button>
+                <a asp-action="Connection" class="icon-link strong-ghost">
+                    <span class="action-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5"></path>
+                            <path d="M12 19l-7-7 7-7"></path>
+                        </svg>
+                    </span>
+                    <span class="action-label">Cancel</span>
+                </a>
+            </div>
+        </form>
+    </article>
+
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Guidance</p>
+                <h2>Connection notes</h2>
+            </div>
+        </div>
+
+        <div class="connection-list">
+            <div class="connection-item">
+                <span>Recommended authentication</span>
+                <strong>Use an API key for Dream Machine and other local UniFi OS installations.</strong>
+            </div>
+            <div class="connection-item">
+                <span>Fallback</span>
+                <strong>Username and password remain available for setups where no API key can be used.</strong>
+            </div>
+            <div class="connection-item">
+                <span>Stored secrets</span>
+                <strong>API key: @(Model.HasStoredApiKey ? "saved" : "not saved"), password: @(Model.HasStoredPassword ? "saved" : "not saved").</strong>
+            </div>
+            <div class="connection-item">
+                <span>Next step</span>
+                <strong>After saving, return to the overview and reload live UniFi data to confirm sites, clients and uplinks.</strong>
+            </div>
+        </div>
+    </article>
+</section>

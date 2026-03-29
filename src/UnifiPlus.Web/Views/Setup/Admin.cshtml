@@ -1,0 +1,62 @@
+@model SetupAdminViewModel
+@{
+    ViewData["Title"] = "Create Administrator";
+}
+
+<section class="hero-panel">
+    <div>
+        <p class="eyebrow">Setup Wizard</p>
+        <h1>Create administrator</h1>
+        <p class="muted hero-copy">Step 1 of 2. Create the first administrator account before connecting UnifiPlus to UniFi.</p>
+    </div>
+    <div class="hero-badge">
+        <span>Next step</span>
+        <strong>UniFi Connection</strong>
+    </div>
+</section>
+
+<section class="grid two-up">
+    <article class="card card-strong">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Step 1</p>
+                <h2>Administrator account</h2>
+            </div>
+        </div>
+
+        <form asp-action="Admin" method="post" class="stack">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="validation"></div>
+
+            <label asp-for="Form.UserId"></label>
+            <input asp-for="Form.UserId" />
+
+            <label asp-for="Form.Password"></label>
+            <input asp-for="Form.Password" />
+
+            <label asp-for="Form.ConfirmPassword"></label>
+            <input asp-for="Form.ConfirmPassword" />
+
+            <button type="submit">Create administrator</button>
+        </form>
+    </article>
+
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Persistent storage</p>
+                <h2>Docker volume paths</h2>
+            </div>
+        </div>
+        <div class="meta-list">
+            <div>
+                <span class="muted">User store</span>
+                <strong>@Model.UserStorePath</strong>
+            </div>
+            <div>
+                <span class="muted">Connection store</span>
+                <strong>@Model.ConnectionStorePath</strong>
+            </div>
+        </div>
+    </article>
+</section>
