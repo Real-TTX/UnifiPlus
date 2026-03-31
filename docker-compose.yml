@@ -1,6 +1,6 @@
 services:
   unifiplus-web:
-    image: ${UNIFIPLUS_IMAGE:-ghcr.io/example/unifiplus:latest}
+    image: ${UNIFIPLUS_IMAGE:-ghcr.io/real-ttx/unifiplus:latest}
     build:
       context: .
       dockerfile: src/UnifiPlus.Web/Dockerfile

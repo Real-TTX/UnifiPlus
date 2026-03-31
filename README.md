@@ -31,6 +31,7 @@ It will automatically:
 
 - build the Docker image on every push to `main`
 - push the image to `ghcr.io`
+- publish a multi-arch image for `linux/amd64` and `linux/arm64`
 - publish `latest` for the default branch
 - publish tag-based versions for Git tags like `v1.0.0`
 - publish a `sha-...` image tag for traceability
