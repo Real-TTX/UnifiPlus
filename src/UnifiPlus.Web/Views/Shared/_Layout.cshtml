@@ -52,6 +52,10 @@
                             <span class="nav-icon">A</span>
                             <span>Users</span>
                         </a>
+                        <a asp-controller="Admin" asp-action="Templates" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Templates" ? "active" : string.Empty)">
+                            <span class="nav-icon">T</span>
+                            <span>Templates</span>
+                        </a>
                     }
                 </nav>
             </aside>

@@ -7,7 +7,7 @@
     <div>
         <p class="eyebrow">Traffic control</p>
         <h1>Bandwidth Limiter</h1>
-        <p class="muted hero-copy">Apply per-client upload and download limits through UniFi bandwidth profiles and keep them visible under Active Rules.</p>
+        <p class="muted hero-copy">Apply per-client upload and download limits through visible UniFi QoS rules and reuse global Mbit templates for faster changes.</p>
     </div>
     <div class="hero-badge">
         <span>Managed clients</span>
@@ -25,7 +25,49 @@
     <div class="flash-error">@actionError</div>
 }
 
-<section class="card card-strong">
+<section class="card bandwidth-presets-card">
+    <div class="section-head">
+        <div>
+            <p class="eyebrow">Templates</p>
+            <h2>Quick presets</h2>
+        </div>
+        @if (Model.IsAdmin)
+        {
+            <a asp-controller="Admin" asp-action="Templates" class="icon-link strong-ghost">
+                <span class="action-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                    </svg>
+                </span>
+                <span class="action-label">Edit templates</span>
+            </a>
+        }
+    </div>
+
+    <div class="template-template-grid">
+        <div>
+            <div class="record-note">Download presets</div>
+            <div class="template-chip-list">
+                @foreach (var template in Model.DownloadTemplateValuesMbps)
+                {
+                    <span class="template-chip template-chip-static">@template Mbit</span>
+                }
+            </div>
+        </div>
+        <div>
+            <div class="record-note">Upload presets</div>
+            <div class="template-chip-list">
+                @foreach (var template in Model.UploadTemplateValuesMbps)
+                {
+                    <span class="template-chip template-chip-static">@template Mbit</span>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="card card-strong bandwidth-clients-card">
     <div class="section-head">
         <div>
             <p class="eyebrow">Assigned clients</p>
@@ -89,13 +131,37 @@
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="ClientId" value="@client.ClientId" />
                         <div class="bandwidth-grid">
-                            <div class="record-field">
+                            <div class="record-field bandwidth-field" data-bandwidth-control>
                                 <label for="download-@client.ClientId">Download limit (Mbps)</label>
-                                <input id="download-@client.ClientId" type="number" min="1" step="1" name="DownloadLimitMbps" value="@(client.DownloadLimitMbps?.ToString() ?? string.Empty)" />
+                                <div class="number-stepper">
+                                    <button type="button" class="stepper-button" data-stepper-action="decrease" aria-label="Decrease download limit">-</button>
+                                    <input id="download-@client.ClientId" class="stepper-input" type="number" min="1" step="1" inputmode="numeric" name="DownloadLimitMbps" value="@(client.DownloadLimitMbps?.ToString() ?? string.Empty)" />
+                                    <span class="stepper-suffix">Mbit</span>
+                                    <button type="button" class="stepper-button" data-stepper-action="increase" aria-label="Increase download limit">+</button>
+                                </div>
+                                <div class="template-chip-list">
+                                    @foreach (var template in Model.DownloadTemplateValuesMbps)
+                                    {
+                                        <button type="button" class="template-chip" data-template-value="@template">@template Mbit</button>
+                                    }
+                                    <button type="button" class="template-chip template-chip-muted" data-template-clear="true">Unlimited</button>
+                                </div>
                             </div>
-                            <div class="record-field">
+                            <div class="record-field bandwidth-field" data-bandwidth-control>
                                 <label for="upload-@client.ClientId">Upload limit (Mbps)</label>
-                                <input id="upload-@client.ClientId" type="number" min="1" step="1" name="UploadLimitMbps" value="@(client.UploadLimitMbps?.ToString() ?? string.Empty)" />
+                                <div class="number-stepper">
+                                    <button type="button" class="stepper-button" data-stepper-action="decrease" aria-label="Decrease upload limit">-</button>
+                                    <input id="upload-@client.ClientId" class="stepper-input" type="number" min="1" step="1" inputmode="numeric" name="UploadLimitMbps" value="@(client.UploadLimitMbps?.ToString() ?? string.Empty)" />
+                                    <span class="stepper-suffix">Mbit</span>
+                                    <button type="button" class="stepper-button" data-stepper-action="increase" aria-label="Increase upload limit">+</button>
+                                </div>
+                                <div class="template-chip-list">
+                                    @foreach (var template in Model.UploadTemplateValuesMbps)
+                                    {
+                                        <button type="button" class="template-chip" data-template-value="@template">@template Mbit</button>
+                                    }
+                                    <button type="button" class="template-chip template-chip-muted" data-template-clear="true">Unlimited</button>
+                                </div>
                             </div>
                         </div>
                         <div class="card-actions card-actions-end">

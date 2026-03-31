@@ -1,4 +1,5 @@
 using UnifiPlus.Web.Data;
+using UnifiPlus.Web.Models;
 
 namespace UnifiPlus.Web.Services;
 

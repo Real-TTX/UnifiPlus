@@ -168,7 +168,57 @@
         });
     }
 
+    function initBandwidthControls() {
+        var controls = document.querySelectorAll("[data-bandwidth-control]");
+        controls.forEach(function (control) {
+            var input = control.querySelector("input[type='number']");
+            if (!input) {
+                return;
+            }
+
+            function currentValue() {
+                var value = parseInt(input.value || "0", 10);
+                return isNaN(value) ? 0 : value;
+            }
+
+            function setValue(value) {
+                input.value = value > 0 ? String(value) : "";
+                input.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+
+            control.querySelectorAll("[data-stepper-action]").forEach(function (button) {
+                button.addEventListener("click", function () {
+                    var next = currentValue();
+                    if (button.getAttribute("data-stepper-action") === "increase") {
+                        next = next > 0 ? next + 1 : 1;
+                    } else {
+                        next = Math.max(0, next - 1);
+                    }
+
+                    setValue(next);
+                    input.focus();
+                });
+            });
+
+            control.querySelectorAll("[data-template-value]").forEach(function (button) {
+                button.addEventListener("click", function () {
+                    var value = parseInt(button.getAttribute("data-template-value") || "0", 10);
+                    setValue(value);
+                    input.focus();
+                });
+            });
+
+            control.querySelectorAll("[data-template-clear]").forEach(function (button) {
+                button.addEventListener("click", function () {
+                    setValue(0);
+                    input.focus();
+                });
+            });
+        });
+    }
+
     initMenu();
     initDeviceCatalog();
     initTabs();
+    initBandwidthControls();
 })();

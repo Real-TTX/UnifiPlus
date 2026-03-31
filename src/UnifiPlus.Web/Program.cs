@@ -28,6 +28,7 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddSingleton<IUniFiConfigurationStore, FileUniFiConfigurationStore>();
 builder.Services.AddSingleton<ILocalUserStore, FileLocalUserStore>();
+builder.Services.AddSingleton<IBandwidthTemplateStore, FileBandwidthTemplateStore>();
 builder.Services.AddSingleton<IIdentityBootstrapService, IdentityBootstrapService>();
 builder.Services.AddSingleton<ILocalIdentityService, LocalIdentityService>();
 builder.Services.AddSingleton<ILocalUserManagementService, LocalUserManagementService>();

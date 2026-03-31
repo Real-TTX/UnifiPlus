@@ -1,0 +1,73 @@
+@model EditBandwidthTemplateViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<section class="hero-panel">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>@Model.Title</h1>
+        <p class="muted hero-copy">@Model.Description</p>
+    </div>
+    <div class="hero-badge">
+        <span>Persistent store</span>
+        <strong>@Model.StoragePath</strong>
+    </div>
+</section>
+
+<section class="grid two-up">
+    <article class="card card-strong">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Current presets</p>
+                <h2>@Model.Title</h2>
+            </div>
+        </div>
+
+        <div class="template-chip-list">
+            @foreach (var value in Model.CurrentTemplatesMbps)
+            {
+                <span class="template-chip template-chip-static">@value Mbit</span>
+            }
+        </div>
+
+        <div class="record-note">
+            Last updated: @(Model.LastUpdatedUtc?.ToLocalTime().ToString("g") ?? "Never")
+        </div>
+    </article>
+
+    <article class="card">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Edit</p>
+                <h2>Template values</h2>
+            </div>
+        </div>
+
+        <form asp-action="SaveTemplates" method="post" class="stack">
+            @Html.AntiForgeryToken()
+            <input asp-for="Form.TemplateType" type="hidden" />
+
+            <div class="record-field">
+                <label asp-for="Form.TemplatesCsv"></label>
+                <input asp-for="Form.TemplatesCsv" placeholder="50, 100, 200" />
+                <span asp-validation-for="Form.TemplatesCsv" class="validation-message"></span>
+                <div class="field-hint">Use comma-separated whole numbers in Mbit, for example: <strong>50, 100, 200</strong>.</div>
+            </div>
+
+            <div class="card-actions">
+                <a asp-action="Templates" class="ghost-button">Cancel</a>
+                <button type="submit" class="action-button">
+                    <span class="action-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <path d="M17 21v-8H7v8"></path>
+                            <path d="M7 3v5h8"></path>
+                        </svg>
+                    </span>
+                    <span class="action-label">Save templates</span>
+                </button>
+            </div>
+        </form>
+    </article>
+</section>

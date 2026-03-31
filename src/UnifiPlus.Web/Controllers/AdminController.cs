@@ -13,20 +13,25 @@ public sealed class AdminController : Controller
     private const string ConnectionStatusSuccessKey = "ConnectionStatusIsSuccess";
     private const string UsersStatusKey = "UsersStatus";
     private const string UsersStatusSuccessKey = "UsersStatusIsSuccess";
+    private const string TemplatesStatusKey = "TemplatesStatus";
+    private const string TemplatesStatusSuccessKey = "TemplatesStatusIsSuccess";
     private readonly IAdminSetupService _adminSetupService;
     private readonly IUniFiApiClient _uniFiApiClient;
     private readonly ILocalUserManagementService _localUserManagementService;
+    private readonly IBandwidthTemplateStore _bandwidthTemplateStore;
     private readonly ILogger<AdminController> _logger;
 
     public AdminController(
         IAdminSetupService adminSetupService,
         IUniFiApiClient uniFiApiClient,
         ILocalUserManagementService localUserManagementService,
+        IBandwidthTemplateStore bandwidthTemplateStore,
         ILogger<AdminController> logger)
     {
         _adminSetupService = adminSetupService;
         _uniFiApiClient = uniFiApiClient;
         _localUserManagementService = localUserManagementService;
+        _bandwidthTemplateStore = bandwidthTemplateStore;
         _logger = logger;
     }
 
@@ -186,6 +191,117 @@ public sealed class AdminController : Controller
         }
 
         return RedirectToAction(nameof(Rules));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Templates(CancellationToken cancellationToken)
+    {
+        var settings = await _bandwidthTemplateStore.GetAsync(cancellationToken);
+        return View(new BandwidthTemplatesViewModel
+        {
+            DownloadTemplatesMbps = settings.DownloadTemplatesMbps
+                .Where(value => value > 0)
+                .Distinct()
+                .OrderBy(value => value)
+                .ToList(),
+            UploadTemplatesMbps = settings.UploadTemplatesMbps
+                .Where(value => value > 0)
+                .Distinct()
+                .OrderBy(value => value)
+                .ToList(),
+            StoragePath = _bandwidthTemplateStore.StoragePath,
+            LastUpdatedUtc = settings.LastUpdatedUtc,
+            StatusMessage = TempData[TemplatesStatusKey] as string,
+            StatusIsSuccess = TempData[TemplatesStatusSuccessKey] as string == bool.TrueString
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveTemplates([Bind(Prefix = "Form")] BandwidthTemplateSettingsRequest request, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            var current = await _bandwidthTemplateStore.GetAsync(cancellationToken);
+            return View("EditTemplate", BuildEditTemplateViewModel(request, current));
+        }
+
+        var currentSettings = await _bandwidthTemplateStore.GetAsync(cancellationToken);
+        var values = request.TemplatesCsv
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(int.Parse)
+            .Where(value => value > 0)
+            .Distinct()
+            .OrderBy(value => value)
+            .ToList();
+
+        var nextSettings = new BandwidthTemplateSettings
+        {
+            DownloadTemplatesMbps = string.Equals(request.TemplateType, "Download", StringComparison.OrdinalIgnoreCase)
+                ? values
+                : currentSettings.DownloadTemplatesMbps,
+            UploadTemplatesMbps = string.Equals(request.TemplateType, "Upload", StringComparison.OrdinalIgnoreCase)
+                ? values
+                : currentSettings.UploadTemplatesMbps
+        };
+
+        await _bandwidthTemplateStore.SaveAsync(nextSettings, cancellationToken);
+
+        TempData[TemplatesStatusKey] = $"{request.TemplateType} templates saved successfully.";
+        TempData[TemplatesStatusSuccessKey] = bool.TrueString;
+        return RedirectToAction(nameof(Templates));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> EditTemplate(string type, CancellationToken cancellationToken)
+    {
+        var settings = await _bandwidthTemplateStore.GetAsync(cancellationToken);
+        var normalizedType = NormalizeTemplateType(type);
+        var request = new BandwidthTemplateSettingsRequest
+        {
+            TemplateType = normalizedType,
+            TemplatesCsv = string.Join(", ", string.Equals(normalizedType, "Upload", StringComparison.OrdinalIgnoreCase)
+                ? settings.UploadTemplatesMbps
+                : settings.DownloadTemplatesMbps)
+        };
+
+        return View(BuildEditTemplateViewModel(request, settings));
+    }
+
+    private EditBandwidthTemplateViewModel BuildEditTemplateViewModel(
+        BandwidthTemplateSettingsRequest request,
+        BandwidthTemplateSettings settings)
+    {
+        var normalizedType = NormalizeTemplateType(request.TemplateType);
+        var isUpload = string.Equals(normalizedType, "Upload", StringComparison.OrdinalIgnoreCase);
+        var currentValues = (isUpload ? settings.UploadTemplatesMbps : settings.DownloadTemplatesMbps)
+            .Where(value => value > 0)
+            .Distinct()
+            .OrderBy(value => value)
+            .ToList();
+
+        return new EditBandwidthTemplateViewModel
+        {
+            Form = new BandwidthTemplateSettingsRequest
+            {
+                TemplateType = normalizedType,
+                TemplatesCsv = request.TemplatesCsv
+            },
+            Title = isUpload ? "Upload templates" : "Download templates",
+            Description = isUpload
+                ? "Edit the reusable upload limit presets used on the Bandwidth Limiter."
+                : "Edit the reusable download limit presets used on the Bandwidth Limiter.",
+            CurrentTemplatesMbps = currentValues,
+            StoragePath = _bandwidthTemplateStore.StoragePath,
+            LastUpdatedUtc = settings.LastUpdatedUtc
+        };
+    }
+
+    private static string NormalizeTemplateType(string? type)
+    {
+        return string.Equals(type, "Upload", StringComparison.OrdinalIgnoreCase)
+            ? "Upload"
+            : "Download";
     }
 
     [HttpGet]

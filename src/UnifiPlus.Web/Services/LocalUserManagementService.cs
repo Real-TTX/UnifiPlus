@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using UnifiPlus.Web.Authorization;
 using UnifiPlus.Web.Data;
+using UnifiPlus.Web.Models;
 
 namespace UnifiPlus.Web.Services;
 
