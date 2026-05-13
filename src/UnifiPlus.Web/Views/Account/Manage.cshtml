@@ -29,6 +29,19 @@
     <div class="flash-error">@actionError</div>
 }
 
+@if (TempData["ApiKeyStatus"] is string apiKeyStatus)
+{
+    <div class="flash-success">@apiKeyStatus</div>
+}
+
+@if (TempData["ApiKeyPlaintext"] is string apiKeyPlaintext)
+{
+    <div class="flash-success">
+        <strong>Copy this API key now:</strong>
+        <code>@apiKeyPlaintext</code>
+    </div>
+}
+
 <section class="account-shell">
 <section class="compact-two-up">
     <article class="card card-strong compact-card">
@@ -88,231 +101,103 @@
             </div>
         }
     </article>
-</section>
 
-<section class="compact-grid">
     <article class="card compact-card">
         <div class="section-head">
             <div>
-                <p class="eyebrow">Assignments</p>
-                <h2>My devices</h2>
+                <p class="eyebrow">Devices</p>
+                <h2>Open device management</h2>
             </div>
         </div>
 
-        @if (Model.AssignedClients.Count == 0)
+        <p class="muted">Open the dedicated devices page to manage your aliases, uplinks, bandwidth limits and claimable clients.</p>
+
+        <div class="card-actions">
+            <a asp-action="Devices" class="icon-link strong-ghost">
+                <span class="action-label">Open devices</span>
+            </a>
+        </div>
+    </article>
+
+    <article class="card compact-card">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Developer</p>
+                <h2>API keys</h2>
+            </div>
+        </div>
+
+        <div class="surface-note">
+            Keys are shown once on creation and stay tied to your account page. Use them later for the tray app or direct REST calls.
+        </div>
+
+        <form asp-action="CreateApiKey" method="post" class="stack compact-form">
+            @Html.AntiForgeryToken()
+
+            <label asp-for="ApiKeyForm.Name"></label>
+            <input asp-for="ApiKeyForm.Name" placeholder="Tray app on office PC" />
+            <div class="field-hint">Use the key later as <strong>X-API-Key</strong> header or Bearer token for `/api/v1/...` requests.</div>
+
+            <div class="card-actions">
+                <button type="submit" class="action-button">
+                    <span class="action-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14"></path>
+                            <path d="M5 12h14"></path>
+                        </svg>
+                    </span>
+                    <span class="action-label">Create API key</span>
+                </button>
+            </div>
+        </form>
+
+        @if (Model.ApiKeys.Count == 0)
         {
-            <p class="muted">No live assigned UniFi clients were returned for your account.</p>
+            <p class="muted section-spaced">No API keys created yet.</p>
         }
         else
         {
-            <div class="compact-record-list">
-                @foreach (var client in Model.AssignedClients)
+            <div class="compact-record-list section-spaced">
+                @foreach (var apiKey in Model.ApiKeys)
                 {
                     <div class="compact-record">
-                        <strong>@(string.IsNullOrWhiteSpace(client.AliasName) ? client.ClientName : client.AliasName)</strong>
-                        @if (!string.IsNullOrWhiteSpace(client.AliasName))
-                        {
-                            <div class="record-note">Real name: @client.ClientName</div>
-                        }
-                        <div class="compact-record-meta">
-                            <span>IP: @client.IpAddress</span>
-                            <span>Policy: @client.PolicyName</span>
-                            @if (!string.IsNullOrWhiteSpace(client.ConnectionType))
-                            {
-                                <span>@client.ConnectionType</span>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(client.Manufacturer))
-                            {
-                                <span>@client.Manufacturer</span>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(client.MacAddress))
-                            {
-                                <span>MAC: @client.MacAddress</span>
-                            }
-                            <span>@(client.IsOnline ? "Online" : "Offline")</span>
-                            @if (client.LastSeenUtc.HasValue)
-                            {
-                                <span>Seen: @client.LastSeenUtc.Value.ToLocalTime().ToString("g")</span>
-                            }
-                        </div>
-                        <form asp-action="SetClientAlias" method="post" class="stack compact-inline-form">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="ClientId" value="@client.ClientId" />
-                            <div class="alias-form-row">
-                                <div class="record-field alias-field">
-                                    <label for="alias-@client.ClientId">Alias in UnifiPlus</label>
-                                    <input id="alias-@client.ClientId" type="text" name="Alias" value="@client.AliasName" placeholder="Set a personal alias" />
-                                </div>
-                                <button type="submit" class="action-button action-button-small">
-                                    <span class="action-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M19 21H5a2 2 0 0 1-2-2V7l5-4h8l5 4v12a2 2 0 0 1-2 2z"></path>
-                                            <path d="M17 21v-8H7v8"></path>
-                                            <path d="M7 3v4h10V3"></path>
-                                        </svg>
-                                    </span>
-                                    <span class="action-label">Save alias</span>
-                                </button>
+                        <div class="record-header">
+                            <div class="record-title">
+                                <strong>@apiKey.Name</strong>
+                                <div class="record-note">Prefix: @apiKey.KeyPrefix...</div>
                             </div>
-                        </form>
+                            <span class="badge">@((apiKey.IsRevoked ? "Revoked" : "Active"))</span>
+                        </div>
+                        <div class="compact-record-meta">
+                            <span>Created: @apiKey.CreatedUtc.ToLocalTime().ToString("g")</span>
+                            <span>Last used: @(apiKey.LastUsedUtc?.ToLocalTime().ToString("g") ?? "Never")</span>
+                        </div>
+                        @if (!apiKey.IsRevoked)
+                        {
+                            <form asp-action="RevokeApiKey" method="post" class="compact-inline-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="KeyId" value="@apiKey.Id" />
+                                <div class="card-actions card-actions-end">
+                                    <button type="submit" class="action-button action-button-danger action-button-small">
+                                        <span class="action-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M3 6h18"></path>
+                                                <path d="M8 6V4h8v2"></path>
+                                                <path d="M19 6l-1 14H6L5 6"></path>
+                                                <path d="M10 11v6"></path>
+                                                <path d="M14 11v6"></path>
+                                            </svg>
+                                        </span>
+                                        <span class="action-label">Revoke</span>
+                                    </button>
+                                </div>
+                            </form>
+                        }
                     </div>
                 }
             </div>
         }
     </article>
-
-    <article class="card compact-card">
-    <div class="section-head">
-        <div>
-            <p class="eyebrow">UniFi clients</p>
-            <h2>Claim a device</h2>
-        </div>
-    </div>
-
-    <div class="device-catalog" data-device-catalog data-page-size="8">
-        <div class="device-toolbar">
-            <label class="device-search">
-                <span class="muted">Search</span>
-                <input type="text" placeholder="Name, hostname, IP, MAC, vendor" data-device-search />
-            </label>
-
-            <label class="device-filter">
-                <span class="muted">Status</span>
-                <select data-device-filter="status">
-                    <option value="all">All</option>
-                    <option value="claimable">Claimable</option>
-                    <option value="assigned">Assigned</option>
-                </select>
-            </label>
-
-            <label class="device-filter">
-                <span class="muted">Connection</span>
-                <select data-device-filter="connection">
-                    <option value="all">All</option>
-                    <option value="wired">Wired</option>
-                    <option value="wifi">WiFi</option>
-                    <option value="other">Other</option>
-                </select>
-            </label>
-
-            <label class="device-filter">
-                <span class="muted">Online</span>
-                <select data-device-filter="online">
-                    <option value="all">All</option>
-                    <option value="online">Online</option>
-                    <option value="offline">Offline</option>
-                </select>
-            </label>
-        </div>
-
-        <div class="device-toolbar device-toolbar-secondary">
-            <div class="muted" data-device-count>@Model.AvailableClients.Count device(s)</div>
-            <label class="device-filter device-page-size">
-                <span class="muted">Per page</span>
-                <select data-device-page-size>
-                    <option value="8" selected="selected">8</option>
-                    <option value="12">12</option>
-                    <option value="24">24</option>
-                </select>
-            </label>
-        </div>
-
-        <div class="compact-record-list" data-device-results>
-        @if (Model.AvailableClients.Count == 0)
-        {
-            <p class="muted">No live UniFi clients were returned. Check the UniFi connection settings and API test first.</p>
-        }
-        else
-        {
-            @foreach (var client in Model.AvailableClients)
-            {
-                <div class="compact-record" data-device-item
-                     data-status="@(client.AssignedToCurrentUser ? "assigned" : "claimable")"
-                     data-connection="@client.ConnectionType.ToLowerInvariant()"
-                     data-online="@(client.IsOnline ? "online" : "offline")"
-                     data-search="@string.Join(" ", new [] { client.Name, client.Hostname, client.IpAddress ?? string.Empty, client.MacAddress, client.Manufacturer, client.ConnectionType }.Where(value => !string.IsNullOrWhiteSpace(value))).ToLowerInvariant()">
-                    <div class="record-header">
-                        <div class="record-title">
-                            <strong>@client.Name</strong>
-                            @if (!string.IsNullOrWhiteSpace(client.AliasName))
-                            {
-                                <div class="record-note">Alias: @client.AliasName</div>
-                            }
-                            <div class="compact-record-meta">
-                                <span>IP: @client.IpAddress</span>
-                                @if (!string.IsNullOrWhiteSpace(client.Hostname))
-                                {
-                                    <span>Host: @client.Hostname</span>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(client.MacAddress))
-                                {
-                                    <span>MAC: @client.MacAddress</span>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(client.Manufacturer))
-                                {
-                                    <span>Vendor: @client.Manufacturer</span>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(client.ConnectionType))
-                                {
-                                    <span>@client.ConnectionType</span>
-                                }
-                                <span>@(client.IsOnline ? "Online" : "Offline")</span>
-                                @if (client.LastSeenUtc.HasValue)
-                                {
-                                    <span>Seen: @client.LastSeenUtc.Value.ToLocalTime().ToString("g")</span>
-                                }
-                            </div>
-                        </div>
-                        @if (client.AssignedToCurrentUser)
-                        {
-                            <span class="badge">Assigned</span>
-                        }
-                    </div>
-                    @if (!client.AssignedToCurrentUser)
-                    {
-                        <form asp-controller="Dashboard" asp-action="Assign" method="post" class="stack">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="ClientId" value="@client.Id" />
-                            <div class="card-actions card-actions-end">
-                                <button type="submit" class="action-button">
-                                    <span class="action-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M12 5v14"></path>
-                                            <path d="M5 12h14"></path>
-                                        </svg>
-                                    </span>
-                                    <span class="action-label">Assign to me</span>
-                                </button>
-                            </div>
-                        </form>
-                    }
-                </div>
-            }
-        }
-        </div>
-
-        <div class="card-actions">
-            <div class="muted" data-device-page-label>Page 1</div>
-            <div class="actions-inline">
-                <button type="button" class="icon-link strong-ghost" data-device-prev>
-                    <span class="action-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M15 18l-6-6 6-6"></path>
-                        </svg>
-                    </span>
-                    <span class="action-label">Previous</span>
-                </button>
-                <button type="button" class="icon-link strong-ghost" data-device-next>
-                    <span class="action-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M9 18l6-6-6-6"></path>
-                        </svg>
-                    </span>
-                    <span class="action-label">Next</span>
-                </button>
-            </div>
-        </div>
-    </div>
-    </article>
 </section>
+
 </section>

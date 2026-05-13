@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
+using UnifiPlus.Web.Authentication;
 using UnifiPlus.Web.Options;
 using UnifiPlus.Web.Services;
 
@@ -21,17 +22,20 @@ builder.Services
     {
         options.LoginPath = "/account/login";
         options.AccessDeniedPath = "/account/login";
-    });
+    })
+    .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationDefaults.SchemeName, _ => { });
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddSingleton<IUniFiConfigurationStore, FileUniFiConfigurationStore>();
 builder.Services.AddSingleton<ILocalUserStore, FileLocalUserStore>();
+builder.Services.AddSingleton<IApiKeyStore, FileApiKeyStore>();
 builder.Services.AddSingleton<IBandwidthTemplateStore, FileBandwidthTemplateStore>();
 builder.Services.AddSingleton<IIdentityBootstrapService, IdentityBootstrapService>();
 builder.Services.AddSingleton<ILocalIdentityService, LocalIdentityService>();
 builder.Services.AddSingleton<ILocalUserManagementService, LocalUserManagementService>();
+builder.Services.AddSingleton<IApiKeyService, ApiKeyService>();
 builder.Services.AddSingleton<IAdminSetupService, AdminSetupService>();
 builder.Services.AddHttpClient<IUniFiApiClient, UniFiApiClient>();
 builder.Services.AddSingleton<IUniFiClientAssignmentService, UniFiClientAssignmentService>();

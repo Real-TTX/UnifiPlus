@@ -1,0 +1,202 @@
+@model AdminUserDevicesViewModel
+@{
+    ViewData["Title"] = "Devices";
+}
+
+<section class="hero-panel">
+    <div>
+        <p class="eyebrow">Administration</p>
+        <h1>User devices</h1>
+        <p class="muted hero-copy">Manage claimed devices, aliases, uplinks and bandwidth for @Model.User.UserId.</p>
+    </div>
+    <div class="hero-badge">
+        <span>User</span>
+        <strong>@Model.User.UserId</strong>
+        <span class="hero-secondary">@Model.User.Role</span>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="@(Model.StatusIsSuccess ? "flash-success" : "flash-error")">@Model.StatusMessage</div>
+}
+
+<div class="content-stack">
+    <section class="card compact-card">
+        <div class="card-actions">
+            <a asp-action="EditUser" asp-route-userId="@Model.User.UserId" class="icon-link strong-ghost">
+                <span class="action-label">Back to user</span>
+            </a>
+        </div>
+    </section>
+
+    <section class="grid two-up">
+        <article class="card card-strong compact-card">
+            <div class="section-head">
+                <div>
+                    <p class="eyebrow">Assignments</p>
+                    <h2>User devices</h2>
+                </div>
+            </div>
+
+            @if (Model.AssignedClients.Count == 0)
+            {
+                <p class="muted">No assigned UniFi clients were found for this user.</p>
+            }
+            else
+            {
+                <div class="compact-record-list">
+                    @foreach (var client in Model.AssignedClients)
+                    {
+                        <div class="compact-record">
+                            <strong>@(string.IsNullOrWhiteSpace(client.AliasName) ? client.ClientName : client.AliasName)</strong>
+                            @if (!string.IsNullOrWhiteSpace(client.AliasName))
+                            {
+                                <div class="record-note">Real name: @client.ClientName</div>
+                            }
+                            <div class="compact-record-meta">
+                                <span>IP: @client.IpAddress</span>
+                                <span>Policy: @client.PolicyName</span>
+                                <span>Current uplink: @client.ActiveWanName</span>
+                                <span>
+                                    Limit:
+                                    @(client.DownloadLimitMbps.HasValue ? $"Down {client.DownloadLimitMbps.Value}" : "Down unlimited")
+                                    /
+                                    @(client.UploadLimitMbps.HasValue ? $"Up {client.UploadLimitMbps.Value}" : "Up unlimited")
+                                </span>
+                            </div>
+
+                            <form asp-action="AdminSetClientAlias" method="post" class="stack compact-inline-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="UserId" value="@Model.User.UserId" />
+                                <input type="hidden" name="ClientId" value="@client.ClientId" />
+                                <div class="alias-form-row">
+                                    <div class="record-field alias-field">
+                                        <label for="admin-alias-@client.ClientId">Alias in UnifiPlus</label>
+                                        <input id="admin-alias-@client.ClientId" type="text" name="Alias" value="@client.AliasName" placeholder="Set a personal alias" />
+                                    </div>
+                                    <button type="submit" class="action-button action-button-small">
+                                        <span class="action-label">Save alias</span>
+                                    </button>
+                                </div>
+                            </form>
+
+                            <form asp-action="AdminUpdateUserWan" method="post" class="stack compact-inline-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="UserId" value="@Model.User.UserId" />
+                                <input type="hidden" name="ClientId" value="@client.ClientId" />
+                                <div class="alias-form-row">
+                                    <div class="record-field alias-field">
+                                        <label for="admin-uplink-@client.ClientId">Uplink</label>
+                                        <select id="admin-uplink-@client.ClientId" name="WanId">
+                                            @foreach (var uplink in client.AvailableWans)
+                                            {
+                                                if (uplink.Id == client.ActiveWanId)
+                                                {
+                                                    <option value="@uplink.Id" selected="selected">@uplink.Name</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@uplink.Id">@uplink.Name</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="action-button action-button-small">
+                                        <span class="action-label">Apply uplink</span>
+                                    </button>
+                                </div>
+                            </form>
+
+                            <form asp-action="AdminUpdateUserBandwidth" method="post" class="stack compact-inline-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="UserId" value="@Model.User.UserId" />
+                                <input type="hidden" name="ClientId" value="@client.ClientId" />
+                                <div class="bandwidth-control-grid">
+                                    <div class="record-field bandwidth-field bandwidth-field-table" data-bandwidth-control>
+                                        <label for="admin-download-@client.ClientId">Download limit (Mbps)</label>
+                                        <div class="number-stepper">
+                                            <button type="button" class="stepper-button" data-stepper-action="decrease" aria-label="Decrease download limit">-</button>
+                                            <input id="admin-download-@client.ClientId" class="stepper-input" type="number" min="1" step="1" inputmode="numeric" name="DownloadLimitMbps" value="@(client.DownloadLimitMbps?.ToString() ?? string.Empty)" />
+                                            <span class="stepper-suffix">Mbit</span>
+                                            <button type="button" class="stepper-button" data-stepper-action="increase" aria-label="Increase download limit">+</button>
+                                        </div>
+                                        <div class="template-chip-list">
+                                            @foreach (var template in Model.DownloadTemplateValuesMbps)
+                                            {
+                                                <button type="button" class="template-chip" data-template-value="@template">@template Mbit</button>
+                                            }
+                                            <button type="button" class="template-chip template-chip-muted" data-template-clear="true">Unlimited</button>
+                                        </div>
+                                    </div>
+                                    <div class="record-field bandwidth-field bandwidth-field-table" data-bandwidth-control>
+                                        <label for="admin-upload-@client.ClientId">Upload limit (Mbps)</label>
+                                        <div class="number-stepper">
+                                            <button type="button" class="stepper-button" data-stepper-action="decrease" aria-label="Decrease upload limit">-</button>
+                                            <input id="admin-upload-@client.ClientId" class="stepper-input" type="number" min="1" step="1" inputmode="numeric" name="UploadLimitMbps" value="@(client.UploadLimitMbps?.ToString() ?? string.Empty)" />
+                                            <span class="stepper-suffix">Mbit</span>
+                                            <button type="button" class="stepper-button" data-stepper-action="increase" aria-label="Increase upload limit">+</button>
+                                        </div>
+                                        <div class="template-chip-list">
+                                            @foreach (var template in Model.UploadTemplateValuesMbps)
+                                            {
+                                                <button type="button" class="template-chip" data-template-value="@template">@template Mbit</button>
+                                            }
+                                            <button type="button" class="template-chip template-chip-muted" data-template-clear="true">Unlimited</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-actions card-actions-end">
+                                    <button type="submit" class="action-button action-button-small">
+                                        <span class="action-label">Apply bandwidth</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    }
+                </div>
+            }
+        </article>
+
+        <article class="card compact-card">
+            <div class="section-head">
+                <div>
+                    <p class="eyebrow">Add</p>
+                    <h2>Available clients</h2>
+                </div>
+            </div>
+
+            <div class="compact-record-list">
+                @foreach (var client in Model.AvailableClients.Where(client => !client.AssignedToCurrentUser))
+                {
+                    <div class="compact-record">
+                        <strong>@client.Name</strong>
+                        <div class="compact-record-meta">
+                            <span>IP: @client.IpAddress</span>
+                            @if (!string.IsNullOrWhiteSpace(client.Hostname))
+                            {
+                                <span>Host: @client.Hostname</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(client.MacAddress))
+                            {
+                                <span>MAC: @client.MacAddress</span>
+                            }
+                            <span>@(client.IsOnline ? "Online" : "Offline")</span>
+                        </div>
+
+                        <form asp-action="AdminAssignClient" method="post" class="compact-inline-form">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="UserId" value="@Model.User.UserId" />
+                            <input type="hidden" name="ClientId" value="@client.Id" />
+                            <div class="card-actions card-actions-end">
+                                <button type="submit" class="action-button action-button-small">
+                                    <span class="action-label">Assign to @Model.User.UserId</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                }
+            </div>
+        </article>
+    </section>
+</div>

@@ -1,12 +1,12 @@
 @model ActiveRulesPageViewModel
 @{
-    ViewData["Title"] = "Active Rules";
+    ViewData["Title"] = "Rules";
 }
 
 <section class="hero-panel">
     <div>
         <p class="eyebrow">Administration</p>
-        <h1>Active Rules</h1>
+        <h1>Rules</h1>
         <p class="muted hero-copy">Review the UniFi rules created by UnifiPlus for uplink switching and bandwidth limiting, then remove entries that are no longer needed.</p>
     </div>
     <div class="hero-badge">
@@ -24,7 +24,7 @@
     <div class="section-head">
         <div>
             <p class="eyebrow">UniFi rules</p>
-            <h2>Active UnifiPlus rules</h2>
+            <h2>UnifiPlus rules</h2>
         </div>
         <span class="badge">@Model.Rules.Count</span>
     </div>

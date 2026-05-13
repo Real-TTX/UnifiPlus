@@ -19,6 +19,8 @@ public sealed class AdminController : Controller
     private readonly IUniFiApiClient _uniFiApiClient;
     private readonly ILocalUserManagementService _localUserManagementService;
     private readonly IBandwidthTemplateStore _bandwidthTemplateStore;
+    private readonly IUniFiClientAssignmentService _assignmentService;
+    private readonly IApiKeyService _apiKeyService;
     private readonly ILogger<AdminController> _logger;
 
     public AdminController(
@@ -26,12 +28,16 @@ public sealed class AdminController : Controller
         IUniFiApiClient uniFiApiClient,
         ILocalUserManagementService localUserManagementService,
         IBandwidthTemplateStore bandwidthTemplateStore,
+        IUniFiClientAssignmentService assignmentService,
+        IApiKeyService apiKeyService,
         ILogger<AdminController> logger)
     {
         _adminSetupService = adminSetupService;
         _uniFiApiClient = uniFiApiClient;
         _localUserManagementService = localUserManagementService;
         _bandwidthTemplateStore = bandwidthTemplateStore;
+        _assignmentService = assignmentService;
+        _apiKeyService = apiKeyService;
         _logger = logger;
     }
 
@@ -334,7 +340,27 @@ public sealed class AdminController : Controller
             return RedirectToAction(nameof(Users));
         }
 
-        return View(BuildUserEditViewModel(user));
+        return View(await BuildUserEditViewModelAsync(user, cancellationToken));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> UserDevices(string userId, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return RedirectToAction(nameof(Users));
+        }
+
+        var users = await _localUserManagementService.GetUsersAsync(cancellationToken);
+        var user = users.FirstOrDefault(item => string.Equals(item.UserId, userId, StringComparison.OrdinalIgnoreCase));
+        if (user is null)
+        {
+            TempData[UsersStatusKey] = "The selected user could not be found.";
+            TempData[UsersStatusSuccessKey] = bool.FalseString;
+            return RedirectToAction(nameof(Users));
+        }
+
+        return View(await BuildUserDevicesViewModelAsync(user, cancellationToken));
     }
 
     [HttpPost]
@@ -377,7 +403,7 @@ public sealed class AdminController : Controller
             TempData[UsersStatusSuccessKey] = bool.FalseString;
         }
 
-        return RedirectToAction(nameof(EditUser), new { userId = request.UserId });
+        return RedirectToAction(nameof(UserDevices), new { userId = request.UserId });
     }
 
     [HttpPost]
@@ -403,7 +429,7 @@ public sealed class AdminController : Controller
             TempData[UsersStatusSuccessKey] = bool.FalseString;
         }
 
-        return RedirectToAction(nameof(EditUser), new { userId = request.UserId });
+        return RedirectToAction(nameof(UserDevices), new { userId = request.UserId });
     }
 
     [HttpPost]
@@ -424,6 +450,127 @@ public sealed class AdminController : Controller
         }
 
         return RedirectToAction(nameof(Users));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AdminAssignClient(AdminAssignClientRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _assignmentService.AssignClientAsync(request.UserId, request.ClientId, cancellationToken);
+            TempData[UsersStatusKey] = "Device assigned successfully.";
+            TempData[UsersStatusSuccessKey] = bool.TrueString;
+        }
+        catch (Exception ex)
+        {
+            TempData[UsersStatusKey] = ex.Message;
+            TempData[UsersStatusSuccessKey] = bool.FalseString;
+        }
+
+        return RedirectToAction(nameof(UserDevices), new { userId = request.UserId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AdminSetClientAlias(AdminSetClientAliasRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _localUserManagementService.SetClientAliasAsync(request.UserId, request.ClientId, request.Alias, cancellationToken);
+            TempData[UsersStatusKey] = string.IsNullOrWhiteSpace(request.Alias)
+                ? "Client alias removed successfully."
+                : "Client alias saved successfully.";
+            TempData[UsersStatusSuccessKey] = bool.TrueString;
+        }
+        catch (Exception ex)
+        {
+            TempData[UsersStatusKey] = ex.Message;
+            TempData[UsersStatusSuccessKey] = bool.FalseString;
+        }
+
+        return RedirectToAction(nameof(EditUser), new { userId = request.UserId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AdminUpdateUserWan(AdminUpdateManagedWanRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _assignmentService.UpdateWanAsync(request.UserId, request.ClientId, request.WanId, cancellationToken);
+            TempData[UsersStatusKey] = "Uplink switch applied successfully.";
+            TempData[UsersStatusSuccessKey] = bool.TrueString;
+        }
+        catch (Exception ex)
+        {
+            TempData[UsersStatusKey] = ex.Message;
+            TempData[UsersStatusSuccessKey] = bool.FalseString;
+        }
+
+        return RedirectToAction(nameof(EditUser), new { userId = request.UserId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AdminUpdateUserBandwidth(AdminUpdateManagedBandwidthRequest request, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid || (!request.DownloadLimitMbps.HasValue && !request.UploadLimitMbps.HasValue))
+        {
+            TempData[UsersStatusKey] = "Enter at least one valid upload or download limit.";
+            TempData[UsersStatusSuccessKey] = bool.FalseString;
+            return RedirectToAction(nameof(UserDevices), new { userId = request.UserId });
+        }
+
+        try
+        {
+            await _assignmentService.UpdateBandwidthAsync(request.UserId, request.ClientId, request.DownloadLimitMbps, request.UploadLimitMbps, cancellationToken);
+            TempData[UsersStatusKey] = "Bandwidth limit applied successfully.";
+            TempData[UsersStatusSuccessKey] = bool.TrueString;
+        }
+        catch (Exception ex)
+        {
+            TempData[UsersStatusKey] = ex.Message;
+            TempData[UsersStatusSuccessKey] = bool.FalseString;
+        }
+
+        return RedirectToAction(nameof(UserDevices), new { userId = request.UserId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AdminCreateApiKey([Bind(Prefix = "ApiKeyForm")] AdminCreateApiKeyRequest request, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData[UsersStatusKey] = "The API key name is required.";
+            TempData[UsersStatusSuccessKey] = bool.FalseString;
+            return RedirectToAction(nameof(EditUser), new { userId = request.UserId });
+        }
+
+        try
+        {
+            var result = await _apiKeyService.CreateAsync(request.UserId, request.Name, cancellationToken);
+            TempData[UsersStatusKey] = $"API key created. Copy it now: {result.PlaintextKey}";
+            TempData[UsersStatusSuccessKey] = bool.TrueString;
+        }
+        catch (Exception ex)
+        {
+            TempData[UsersStatusKey] = ex.Message;
+            TempData[UsersStatusSuccessKey] = bool.FalseString;
+        }
+
+        return RedirectToAction(nameof(EditUser), new { userId = request.UserId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AdminRevokeApiKey(AdminRevokeApiKeyRequest request, CancellationToken cancellationToken)
+    {
+        var revoked = await _apiKeyService.RevokeAsync(request.UserId, request.KeyId, cancellationToken);
+        TempData[UsersStatusKey] = revoked ? "API key revoked successfully." : "The selected API key could not be found.";
+        TempData[UsersStatusSuccessKey] = revoked ? bool.TrueString : bool.FalseString;
+        return RedirectToAction(nameof(EditUser), new { userId = request.UserId });
     }
 
     private UserManagementViewModel BuildUserManagementViewModel(
@@ -447,8 +594,10 @@ public sealed class AdminController : Controller
         };
     }
 
-    private UserEditViewModel BuildUserEditViewModel(Data.LocalUser user)
+    private async Task<UserEditViewModel> BuildUserEditViewModelAsync(Data.LocalUser user, CancellationToken cancellationToken)
     {
+        var apiKeys = await _apiKeyService.GetForUserAsync(user.UserId, cancellationToken);
+
         return new UserEditViewModel
         {
             StatusMessage = TempData[UsersStatusKey] as string,
@@ -472,7 +621,53 @@ public sealed class AdminController : Controller
             DeleteForm = new AdminUserDeleteRequest
             {
                 UserId = user.UserId
+            },
+            ApiKeys = apiKeys
+                .Select(key => new ApiKeyListItemViewModel
+                {
+                    Id = key.Id,
+                    Name = key.Name,
+                    KeyPrefix = key.KeyPrefix,
+                    CreatedUtc = key.CreatedUtc,
+                    LastUsedUtc = key.LastUsedUtc,
+                    IsRevoked = key.IsRevoked
+                })
+                .ToList(),
+            ApiKeyForm = new AdminCreateApiKeyRequest
+            {
+                UserId = user.UserId
             }
+        };
+    }
+
+    private async Task<AdminUserDevicesViewModel> BuildUserDevicesViewModelAsync(Data.LocalUser user, CancellationToken cancellationToken)
+    {
+        var dashboard = await _assignmentService.BuildDashboardAsync(user.UserId, string.Equals(user.Role, AppRoles.Admin, StringComparison.OrdinalIgnoreCase), cancellationToken);
+        var templates = await _bandwidthTemplateStore.GetAsync(cancellationToken);
+
+        return new AdminUserDevicesViewModel
+        {
+            User = new ManagedUserViewModel
+            {
+                UserId = user.UserId,
+                Role = user.Role,
+                CreatedUtc = user.CreatedUtc,
+                IsCurrentUser = string.Equals(user.UserId, User.Identity?.Name, StringComparison.OrdinalIgnoreCase)
+            },
+            StatusMessage = TempData[UsersStatusKey] as string,
+            StatusIsSuccess = TempData[UsersStatusSuccessKey] as string == bool.TrueString,
+            AvailableClients = dashboard.AllClients,
+            AssignedClients = dashboard.AssignedClients,
+            DownloadTemplateValuesMbps = templates.DownloadTemplatesMbps
+                .Where(value => value > 0)
+                .Distinct()
+                .OrderBy(value => value)
+                .ToList(),
+            UploadTemplateValuesMbps = templates.UploadTemplatesMbps
+                .Where(value => value > 0)
+                .Distinct()
+                .OrderBy(value => value)
+                .ToList()
         };
     }
 }

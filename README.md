@@ -19,9 +19,12 @@
 docker compose up --build
 ```
 
-The app will be available at [http://localhost:8080](http://localhost:8080).
+This starts two containers:
 
-The local container name is `unifiplus`.
+- `unifiplus-dev`: local development build on [http://localhost:8080](http://localhost:8080)
+- `unifiplus-master`: published GitHub image on [http://localhost:8081](http://localhost:8081)
+
+The local container names are `unifiplus-dev` and `unifiplus-master`.
 
 ## Publish To GitHub
 
@@ -65,11 +68,46 @@ git branch -M main
 git push -u origin main
 ```
 
-If you want to pull the published image locally with Docker Compose, set:
+If you want to override the default images or ports locally, set:
 
 ```bash
-export UNIFIPLUS_IMAGE=ghcr.io/<owner>/<repo>:latest
+export UNIFIPLUS_DEV_IMAGE=unifiplus-local:dev
+export UNIFIPLUS_MASTER_IMAGE=ghcr.io/<owner>/<repo>:latest
+export UNIFIPLUS_DEV_PORT=8080
+export UNIFIPLUS_MASTER_PORT=8081
 docker compose up -d
+```
+
+## REST API
+
+UnifiPlus now includes a JSON REST API for desktop helpers and tray tools.
+
+Authentication:
+
+- create an API key in the account page
+- send it as `X-API-Key: <key>` or `Authorization: Bearer <key>`
+
+Endpoints:
+
+- `GET /api/v1/health`
+- `GET /api/v1/me`
+- `GET /api/v1/wans`
+- `GET /api/v1/clients`
+- `GET /api/v1/clients?scope=all`
+- `POST /api/v1/clients/{clientId}/claim`
+- `POST /api/v1/clients/{clientId}/uplink`
+- `POST /api/v1/clients/{clientId}/bandwidth`
+- `GET /api/v1/bandwidth/templates`
+
+Examples:
+
+```bash
+curl -H "X-API-Key: YOUR_KEY" http://localhost:8080/api/v1/me
+curl -H "X-API-Key: YOUR_KEY" http://localhost:8080/api/v1/wans
+curl -X POST http://localhost:8080/api/v1/clients/CLIENT_ID/uplink \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_KEY" \
+  -d '{"wanId":"wan2"}'
 ```
 
 ## Next implementation steps

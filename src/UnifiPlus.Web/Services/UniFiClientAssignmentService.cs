@@ -17,6 +17,11 @@ public sealed class UniFiClientAssignmentService : IUniFiClientAssignmentService
     public async Task<DashboardViewModel> BuildDashboardAsync(ClaimsPrincipal user, CancellationToken cancellationToken)
     {
         var userId = GetUserId(user);
+        return await BuildDashboardAsync(userId, user.IsInRole("Admin"), cancellationToken);
+    }
+
+    public async Task<DashboardViewModel> BuildDashboardAsync(string userId, bool isAdmin, CancellationToken cancellationToken)
+    {
         var clients = await _uniFiApiClient.GetClientsAsync(userId, cancellationToken);
         var aliases = await _localUserManagementService.GetClientAliasesAsync(userId, cancellationToken);
         clients = ApplyAliases(clients, aliases);
@@ -26,7 +31,7 @@ public sealed class UniFiClientAssignmentService : IUniFiClientAssignmentService
         return new DashboardViewModel
         {
             UserId = userId,
-            IsAdmin = user.IsInRole("Admin"),
+            IsAdmin = isAdmin,
             AvailableWans = wans,
             AssignedClients = assignedClients,
             AllClients = clients
@@ -54,6 +59,11 @@ public sealed class UniFiClientAssignmentService : IUniFiClientAssignmentService
     public Task AssignClientAsync(ClaimsPrincipal user, string clientId, CancellationToken cancellationToken)
     {
         var userId = GetUserId(user);
+        return AssignClientAsync(userId, clientId, cancellationToken);
+    }
+
+    public Task AssignClientAsync(string userId, string clientId, CancellationToken cancellationToken)
+    {
         return _uniFiApiClient.AssignClientToUserAsync(userId, clientId, cancellationToken);
     }
 
@@ -65,12 +75,22 @@ public sealed class UniFiClientAssignmentService : IUniFiClientAssignmentService
     public Task UpdateWanAsync(ClaimsPrincipal user, string clientId, string wanId, CancellationToken cancellationToken)
     {
         var userId = GetUserId(user);
+        return UpdateWanAsync(userId, clientId, wanId, cancellationToken);
+    }
+
+    public Task UpdateWanAsync(string userId, string clientId, string wanId, CancellationToken cancellationToken)
+    {
         return _uniFiApiClient.UpdateWanPolicyAsync(userId, clientId, wanId, cancellationToken);
     }
 
     public Task UpdateBandwidthAsync(ClaimsPrincipal user, string clientId, int? downloadLimitMbps, int? uploadLimitMbps, CancellationToken cancellationToken)
     {
         var userId = GetUserId(user);
+        return UpdateBandwidthAsync(userId, clientId, downloadLimitMbps, uploadLimitMbps, cancellationToken);
+    }
+
+    public Task UpdateBandwidthAsync(string userId, string clientId, int? downloadLimitMbps, int? uploadLimitMbps, CancellationToken cancellationToken)
+    {
         return _uniFiApiClient.UpdateBandwidthLimitAsync(userId, clientId, downloadLimitMbps, uploadLimitMbps, cancellationToken);
     }
 

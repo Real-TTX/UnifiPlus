@@ -22,6 +22,7 @@
     <div class="@(Model.StatusIsSuccess ? "flash-success" : "flash-error")">@Model.StatusMessage</div>
 }
 
+<div class="content-stack">
 <section class="grid two-up">
     <article class="card card-strong">
         <div class="section-head">
@@ -166,3 +167,86 @@
         </div>
     </article>
 </section>
+
+<section class="card compact-card">
+    <div class="section-head">
+        <div>
+            <p class="eyebrow">Devices</p>
+            <h2>Open device management</h2>
+        </div>
+    </div>
+
+    <p class="muted">Open the dedicated devices page for this user to manage aliases, claims, uplinks and bandwidth settings.</p>
+
+    <div class="card-actions">
+        <a asp-action="UserDevices" asp-route-userId="@Model.User.UserId" class="icon-link strong-ghost">
+            <span class="action-label">Open devices</span>
+        </a>
+    </div>
+</section>
+
+<section class="card compact-card">
+    <div class="section-head">
+        <div>
+            <p class="eyebrow">Developer</p>
+            <h2>API keys</h2>
+        </div>
+    </div>
+
+    <div class="surface-note">
+        Create and revoke keys here for desktop tooling or external integrations. After saving, you stay on this user page.
+    </div>
+
+    <form asp-action="AdminCreateApiKey" method="post" class="stack compact-form">
+        @Html.AntiForgeryToken()
+        <input asp-for="ApiKeyForm.UserId" type="hidden" />
+        <label asp-for="ApiKeyForm.Name"></label>
+        <input asp-for="ApiKeyForm.Name" placeholder="Tray app on office PC" />
+        <div class="card-actions">
+            <button type="submit" class="action-button action-button-small">
+                <span class="action-label">Create API key</span>
+            </button>
+        </div>
+    </form>
+
+    @if (Model.ApiKeys.Count == 0)
+    {
+        <p class="muted section-spaced">No API keys created for this user yet.</p>
+    }
+    else
+    {
+        <div class="compact-record-list section-spaced">
+            @foreach (var apiKey in Model.ApiKeys)
+            {
+                <div class="compact-record">
+                    <div class="record-header">
+                        <div class="record-title">
+                            <strong>@apiKey.Name</strong>
+                            <div class="record-note">Prefix: @apiKey.KeyPrefix...</div>
+                        </div>
+                        <span class="badge">@((apiKey.IsRevoked ? "Revoked" : "Active"))</span>
+                    </div>
+                    <div class="compact-record-meta">
+                        <span>Created: @apiKey.CreatedUtc.ToLocalTime().ToString("g")</span>
+                        <span>Last used: @(apiKey.LastUsedUtc?.ToLocalTime().ToString("g") ?? "Never")</span>
+                    </div>
+                    @if (!apiKey.IsRevoked)
+                    {
+                        <form asp-action="AdminRevokeApiKey" method="post" class="compact-inline-form">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="UserId" value="@Model.User.UserId" />
+                            <input type="hidden" name="KeyId" value="@apiKey.Id" />
+                            <div class="card-actions card-actions-end">
+                                <button type="submit" class="action-button action-button-danger action-button-small">
+                                    <span class="action-label">Revoke</span>
+                                </button>
+                            </div>
+                        </form>
+                    }
+                </div>
+            }
+        </div>
+    }
+</section>
+
+</div>

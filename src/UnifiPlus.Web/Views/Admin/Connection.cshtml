@@ -7,7 +7,7 @@
     <div>
         <p class="eyebrow">Administration</p>
         <h1>UniFi connection</h1>
-        <p class="muted hero-copy">Review the current UniFi connection settings and open the dedicated edit page when you want to change them.</p>
+        <p class="muted hero-copy">Review and update the current UniFi connection settings here without leaving the overview.</p>
     </div>
     <div class="hero-badge">
         <span>Persistent store</span>
@@ -29,8 +29,8 @@
     <article class="card card-strong">
         <div class="section-head">
             <div>
-                <p class="eyebrow">Connection</p>
-                <h2>Saved settings</h2>
+                <p class="eyebrow">Edit</p>
+                <h2>Connection settings</h2>
             </div>
             @if (Model.HasSavedConfiguration)
             {
@@ -38,48 +38,56 @@
             }
         </div>
 
-        <div class="summary-grid">
-            <div class="summary-tile">
-                <span>Base URL</span>
-                <strong>@(string.IsNullOrWhiteSpace(Model.Form.BaseUrl) ? "-" : Model.Form.BaseUrl)</strong>
-            </div>
-            <div class="summary-tile">
-                <span>Site</span>
-                <strong>@(string.IsNullOrWhiteSpace(Model.Form.Site) ? "-" : Model.Form.Site)</strong>
-            </div>
-            <div class="summary-tile">
-                <span>Username</span>
-                <strong>@(string.IsNullOrWhiteSpace(Model.Form.Username) ? "-" : Model.Form.Username)</strong>
-            </div>
-            <div class="summary-tile">
-                <span>Stored API key</span>
-                <strong>@(Model.HasStoredApiKey ? "Yes" : "No")</strong>
-            </div>
-            <div class="summary-tile">
-                <span>Stored password</span>
-                <strong>@(Model.HasStoredPassword ? "Yes" : "No")</strong>
-            </div>
-            <div class="summary-tile">
-                <span>Self-signed TLS</span>
-                <strong>@(Model.Form.AllowSelfSignedTls ? "Allowed" : "Disabled")</strong>
-            </div>
-            <div class="summary-tile">
-                <span>Last updated</span>
-                <strong>@(Model.LastUpdatedUtc?.ToLocalTime().ToString("g") ?? "Never")</strong>
-            </div>
-        </div>
+        <form asp-action="Save" method="post" class="stack">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="validation"></div>
 
-        <div class="card-actions">
-            <a asp-action="EditConnection" class="icon-link strong-ghost">
-                <span class="action-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 20h9"></path>
-                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
-                    </svg>
-                </span>
-                <span class="action-label">Edit connection</span>
-            </a>
-        </div>
+            <div class="info-panel">
+                <strong>Authentication</strong>
+                <p class="muted">Recommended: API key. Fallback: Username and Password. You only need one of these options.</p>
+                <div class="secret-state">
+                    <span>Stored API key: <strong>@(Model.HasStoredApiKey ? "yes" : "no")</strong></span>
+                    <span>Stored password: <strong>@(Model.HasStoredPassword ? "yes" : "no")</strong></span>
+                </div>
+            </div>
+
+            <label for="BaseUrl">UniFi base URL</label>
+            <input id="BaseUrl" name="BaseUrl" type="text" value="@Model.Form.BaseUrl" />
+            <div class="field-hint">Example: `https://10.10.0.1`</div>
+
+            <label for="Site">Site name</label>
+            <input id="Site" name="Site" type="text" value="@Model.Form.Site" />
+            <div class="field-hint">Usually `default` unless your UniFi setup uses a different site name.</div>
+
+            <label for="ApiKey">API key</label>
+            <input id="ApiKey" name="ApiKey" type="text" value="@Model.Form.ApiKey" />
+            <div class="field-hint">Optional. If you provide an API key, Username and Password can stay empty. Leave blank to keep the stored key.</div>
+
+            <label for="Username">Username</label>
+            <input id="Username" name="Username" type="text" value="@Model.Form.Username" />
+            <div class="field-hint">Optional fallback when no API key is available.</div>
+
+            <label for="Password">Password</label>
+            <input id="Password" name="Password" type="password" value="" />
+            <div class="field-hint">Used together with Username when no API key is available. Leave blank to keep the stored password.</div>
+
+            <label class="checkbox-row">
+                <input name="AllowSelfSignedTls" type="checkbox" value="true" @(Model.Form.AllowSelfSignedTls ? "checked=\"checked\"" : null) />
+                <input name="AllowSelfSignedTls" type="hidden" value="false" />
+                <span>Allow self-signed TLS while testing local UniFi installations</span>
+            </label>
+
+            <div class="card-actions">
+                <button type="submit" class="action-button">
+                    <span class="action-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 6 9 17l-5-5"></path>
+                        </svg>
+                    </span>
+                    <span class="action-label">Save configuration</span>
+                </button>
+            </div>
+        </form>
     </article>
 
     <article class="card">
@@ -133,7 +141,7 @@
     </article>
 </section>
 
-<section class="card">
+<section class="card section-spaced">
     <div class="section-head">
         <div>
             <p class="eyebrow">Recovery</p>

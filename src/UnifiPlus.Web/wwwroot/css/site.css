@@ -836,6 +836,10 @@ button:hover {
     margin-top: 1.5rem;
 }
 
+.section-spaced {
+    margin-top: 1.5rem;
+}
+
 .record-note {
     margin-top: 0.7rem;
     color: var(--muted);
@@ -1129,6 +1133,85 @@ button:hover {
 .table-actions {
     display: flex;
     justify-content: flex-end;
+}
+
+.bandwidth-inline-form {
+    margin: 0;
+}
+
+.bandwidth-client-table {
+    min-width: 940px;
+}
+
+.bandwidth-status-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.bandwidth-controls-hint {
+    min-width: 170px;
+}
+
+.bandwidth-action-cell {
+    white-space: nowrap;
+    vertical-align: middle !important;
+    width: 1%;
+}
+
+.bandwidth-control-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 1rem 1.25rem;
+}
+
+.bandwidth-control-list {
+    display: grid;
+    gap: 0.85rem;
+    min-width: 290px;
+}
+
+.bandwidth-control-panel {
+    padding: 0.85rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.bandwidth-control-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.55rem;
+}
+
+.bandwidth-control-panel .template-chip-list {
+    margin-top: 0.7rem;
+}
+
+.bandwidth-control-panel-compact {
+    min-width: 220px;
+    padding: 0.7rem;
+}
+
+.bandwidth-control-panel-compact .template-chip-list {
+    gap: 0.4rem;
+}
+
+.bandwidth-control-panel-compact .template-chip {
+    min-width: 0;
+    padding-inline: 0.7rem;
+}
+
+.bandwidth-client-meta {
+    display: grid;
+    gap: 0.22rem;
+}
+
+.table-title-tight {
+    margin-bottom: 0.2rem;
 }
 
 .data-table td form {

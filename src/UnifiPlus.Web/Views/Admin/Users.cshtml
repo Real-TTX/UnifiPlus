@@ -9,10 +9,6 @@
         <h1>User management</h1>
         <p class="muted hero-copy">Create local users, manage roles, reset passwords and remove accounts from the persistent UnifiPlus user store.</p>
     </div>
-    <div class="hero-badge">
-        <span>Current admin</span>
-        <strong>@Model.CurrentUserId</strong>
-    </div>
 </section>
 
 @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
@@ -21,53 +17,71 @@
 }
 
 <section class="card">
-        <div class="section-head">
-            <div>
-                <p class="eyebrow">Store</p>
-                <h2>Local accounts</h2>
-            </div>
-            <div class="actions-inline">
-                <span class="badge">@Model.Users.Count user(s)</span>
-                <a asp-action="AddUser" class="icon-link strong-ghost">
-                    <span class="action-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 5v14"></path>
-                            <path d="M5 12h14"></path>
-                        </svg>
-                    </span>
-                    <span class="action-label">Add user</span>
-                </a>
-            </div>
+    <div class="section-head">
+        <div>
+            <p class="eyebrow">Accounts</p>
+            <h2>Local users</h2>
         </div>
+        <div class="actions-inline">
+            <span class="badge">@Model.Users.Count user(s)</span>
+            <a asp-action="AddUser" class="icon-link strong-ghost">
+                <span class="action-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14"></path>
+                        <path d="M5 12h14"></path>
+                    </svg>
+                </span>
+                <span class="action-label">Add user</span>
+            </a>
+        </div>
+    </div>
 
-        <div class="user-list">
-            @foreach (var user in Model.Users)
-            {
-                <div class="user-row">
-                    <div class="user-copy">
-                        <strong>@user.UserId</strong>
-                        <div class="user-meta">
-                            <span>Role: @user.Role</span>
-                            <span>Created: @user.CreatedUtc.ToLocalTime().ToString("g")</span>
-                            @if (user.IsCurrentUser)
-                            {
-                                <span>Current session</span>
-                            }
-                        </div>
-                    </div>
-                    <div class="actions-inline">
-                        <span class="badge">@user.Role</span>
-                        <a asp-action="EditUser" asp-route-userId="@user.UserId" class="icon-link strong-ghost">
-                            <span class="action-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 20h9"></path>
-                                    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
-                                </svg>
-                            </span>
-                            <span class="action-label">Edit user</span>
-                        </a>
-                    </div>
-                </div>
-            }
-        </div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Created</th>
+                    <th>Session</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Users.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5" class="table-copy">No local users have been created yet.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var user in Model.Users)
+                    {
+                        <tr>
+                            <td>
+                                <div class="table-title">@user.UserId</div>
+                            </td>
+                            <td><span class="badge">@user.Role</span></td>
+                            <td>@user.CreatedUtc.ToLocalTime().ToString("g")</td>
+                            <td>@(user.IsCurrentUser ? "Current session" : "-")</td>
+                            <td>
+                                <div class="table-actions">
+                                    <a asp-action="EditUser" asp-route-userId="@user.UserId" class="icon-link strong-ghost">
+                                        <span class="action-icon" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M12 20h9"></path>
+                                                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                                            </svg>
+                                        </span>
+                                        <span class="action-label">Edit user</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
 </section>

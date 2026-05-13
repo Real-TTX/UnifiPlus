@@ -1,12 +1,8 @@
 namespace UnifiPlus.Web.Models;
 
-public sealed class AccountViewModel
+public sealed class AccountDevicesViewModel
 {
     public string UserId { get; init; } = string.Empty;
-
-    public string Role { get; init; } = string.Empty;
-
-    public bool IsAdmin => string.Equals(Role, "Admin", StringComparison.OrdinalIgnoreCase);
 
     public string DisplayName => string.IsNullOrWhiteSpace(UserId) ? "User" : UserId;
 
@@ -16,9 +12,7 @@ public sealed class AccountViewModel
 
     public IReadOnlyList<AssignedClientViewModel> AssignedClients { get; init; } = [];
 
-    public ChangePasswordRequest PasswordForm { get; init; } = new();
+    public IReadOnlyList<int> DownloadTemplateValuesMbps { get; init; } = [];
 
-    public CreateApiKeyRequest ApiKeyForm { get; init; } = new();
-
-    public IReadOnlyList<ApiKeyListItemViewModel> ApiKeys { get; init; } = [];
+    public IReadOnlyList<int> UploadTemplateValuesMbps { get; init; } = [];
 }

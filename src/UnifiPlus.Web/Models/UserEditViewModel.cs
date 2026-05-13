@@ -10,6 +10,14 @@ public sealed class UserEditViewModel
 
     public AdminUserDeleteRequest DeleteForm { get; init; } = new();
 
+    public IReadOnlyList<AssignedClientViewModel> AssignedClients { get; init; } = [];
+
+    public IReadOnlyList<UniFiClient> AvailableClients { get; init; } = [];
+
+    public IReadOnlyList<ApiKeyListItemViewModel> ApiKeys { get; init; } = [];
+
+    public AdminCreateApiKeyRequest ApiKeyForm { get; init; } = new();
+
     public string? StatusMessage { get; init; }
 
     public bool StatusIsSuccess { get; init; }

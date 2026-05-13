@@ -1,14 +1,29 @@
 services:
-  unifiplus-web:
-    image: ${UNIFIPLUS_IMAGE:-ghcr.io/real-ttx/unifiplus:latest}
+  unifiplus-dev:
+    image: ${UNIFIPLUS_DEV_IMAGE:-unifiplus-local:dev}
     build:
       context: .
       dockerfile: src/UnifiPlus.Web/Dockerfile
-    container_name: unifiplus
+    container_name: unifiplus-dev
     ports:
-      - "8080:8080"
+      - "${UNIFIPLUS_DEV_PORT:-8080}:8080"
     volumes:
-      - unifiplus-data:/data/unifiplus
+      - unifiplus-dev-data:/data/unifiplus
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 8080
+      DataStorage__RootPath: /data/unifiplus
+      UniFi__BaseUrl: https://unifi.local
+      UniFi__ApiKey: change-me
+      UniFi__Site: default
+
+  unifiplus-master:
+    image: ${UNIFIPLUS_MASTER_IMAGE:-ghcr.io/real-ttx/unifiplus:latest}
+    container_name: unifiplus-master
+    ports:
+      - "${UNIFIPLUS_MASTER_PORT:-8081}:8080"
+    volumes:
+      - unifiplus-master-data:/data/unifiplus
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 8080
@@ -18,4 +33,5 @@ services:
       UniFi__Site: default
 
 volumes:
-  unifiplus-data:
+  unifiplus-dev-data:
+  unifiplus-master-data:
