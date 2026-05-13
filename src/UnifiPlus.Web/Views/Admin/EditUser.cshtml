@@ -4,19 +4,6 @@
     ViewData["Title"] = "Edit User";
 }
 
-<section class="hero-panel">
-    <div>
-        <p class="eyebrow">Administration</p>
-        <h1>Edit user</h1>
-        <p class="muted hero-copy">Manage role, password and account lifecycle for this local UnifiPlus user.</p>
-    </div>
-    <div class="hero-badge">
-        <span>User</span>
-        <strong>@Model.User.UserId</strong>
-        <span class="hero-secondary">@Model.User.Role</span>
-    </div>
-</section>
-
 @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
 {
     <div class="@(Model.StatusIsSuccess ? "flash-success" : "flash-error")">@Model.StatusMessage</div>

@@ -1,6 +1,9 @@
-@model DashboardViewModel
+@model BandwidthPageViewModel
 @{
-    ViewData["Title"] = "Uplink Switcher";
+    ViewData["Title"] = "Add Client";
+    var claimableClients = Model.AvailableClients
+        .Where(client => !client.AssignedToCurrentUser)
+        .ToList();
 }
 
 @if (TempData["ActionStatus"] is string actionStatus)
@@ -14,22 +17,22 @@
 }
 
 <section class="content-stack">
-    <section class="card card-strong bandwidth-clients-card">
+    <section class="card card-strong">
         <div class="section-head">
             <div>
-                <p class="eyebrow">Assigned clients</p>
-                <h2>Uplink switching</h2>
+                <p class="eyebrow">Available clients</p>
+                <h2>Add client</h2>
             </div>
             <div class="actions-inline">
-                <span class="badge">@Model.AssignedClients.Count</span>
-                <a asp-action="AddClient" class="icon-link strong-ghost">
+                <span class="badge">@claimableClients.Count</span>
+                <a asp-action="Index" class="icon-link strong-ghost">
                     <span class="action-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 5v14"></path>
-                            <path d="M5 12h14"></path>
+                            <path d="M19 12H5"></path>
+                            <path d="M12 19l-7-7 7-7"></path>
                         </svg>
                     </span>
-                    <span class="action-label">Add client</span>
+                    <span class="action-label">Back</span>
                 </a>
             </div>
         </div>
@@ -38,7 +41,7 @@
             <div class="device-toolbar">
                 <label class="device-search">
                     <span class="muted">Search</span>
-                    <input type="text" placeholder="Name, hostname, IP, MAC" data-device-search />
+                    <input type="text" placeholder="Name, hostname, IP, MAC, vendor" data-device-search />
                 </label>
 
                 <label class="device-filter">
@@ -71,23 +74,23 @@
             </div>
 
             <div class="device-toolbar device-toolbar-secondary">
-                <div class="muted" data-device-count>@Model.AssignedClients.Count client(s)</div>
+                <div class="muted" data-device-count>@claimableClients.Count client(s)</div>
             </div>
 
-            @if (Model.AssignedClients.Count == 0)
+            @if (claimableClients.Count == 0)
             {
                 <div class="empty-state">
-                    <h3>No assigned UniFi clients available</h3>
-                    <p class="muted">Open Add client to assign a UniFi client for uplink switching.</p>
+                    <h3>No unassigned UniFi clients available</h3>
+                    <p class="muted">Every visible UniFi client is already assigned to your account.</p>
                     <div class="card-actions">
-                        <a asp-action="AddClient" class="icon-link strong-ghost">
+                        <a asp-action="Index" class="icon-link strong-ghost">
                             <span class="action-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 5v14"></path>
-                                    <path d="M5 12h14"></path>
+                                    <path d="M19 12H5"></path>
+                                    <path d="M12 19l-7-7 7-7"></path>
                                 </svg>
                             </span>
-                            <span class="action-label">Add client</span>
+                            <span class="action-label">Back</span>
                         </a>
                     </div>
                 </div>
@@ -101,36 +104,33 @@
                                 <th>Name</th>
                                 <th>Client</th>
                                 <th>Status</th>
-                                <th>Uplink</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var client in Model.AssignedClients)
+                            @foreach (var client in claimableClients)
                             {
                                 var connectionType = string.IsNullOrWhiteSpace(client.ConnectionType) ? "other" : client.ConnectionType.ToLowerInvariant();
-                                var formId = $"uplink-form-{client.ClientId}";
                                 var search = string.Join(" ", new[]
                                 {
-                                    client.ClientName,
+                                    client.Name,
                                     client.AliasName ?? string.Empty,
                                     client.Hostname ?? string.Empty,
                                     client.IpAddress ?? string.Empty,
                                     client.MacAddress ?? string.Empty,
-                                    client.Manufacturer ?? string.Empty,
-                                    client.ActiveWanName ?? string.Empty
+                                    client.Manufacturer ?? string.Empty
                                 }.Where(value => !string.IsNullOrWhiteSpace(value))).ToLowerInvariant();
 
                                 <tr data-device-item
-                                    data-status="assigned"
+                                    data-status="claimable"
                                     data-connection="@connectionType"
                                     data-online="@(client.IsOnline ? "online" : "offline")"
                                     data-search="@search">
                                     <td>
-                                        <div class="table-title">@(string.IsNullOrWhiteSpace(client.AliasName) ? client.ClientName : client.AliasName)</div>
+                                        <div class="table-title">@(string.IsNullOrWhiteSpace(client.AliasName) ? client.Name : client.AliasName)</div>
                                         @if (!string.IsNullOrWhiteSpace(client.AliasName))
                                         {
-                                            <div class="table-copy">Real name: @client.ClientName</div>
+                                            <div class="table-copy">Real name: @client.Name</div>
                                         }
                                     </td>
                                     <td>
@@ -143,60 +143,35 @@
                                         {
                                             <div class="table-copy">MAC: @client.MacAddress</div>
                                         }
+                                        @if (!string.IsNullOrWhiteSpace(client.Manufacturer))
+                                        {
+                                            <div class="table-copy">Vendor: @client.Manufacturer</div>
+                                        }
                                     </td>
                                     <td>
                                         <div class="status-stack">
-                                            <span class="badge">Assigned</span>
+                                            <span class="table-copy">Available</span>
                                             <span class="table-copy">@(client.IsOnline ? "Online" : "Offline")</span>
                                             @if (!string.IsNullOrWhiteSpace(client.ConnectionType))
                                             {
                                                 <span class="table-copy">@client.ConnectionType</span>
                                             }
-                                            @if (!string.IsNullOrWhiteSpace(client.Manufacturer))
-                                            {
-                                                <span class="table-copy">@client.Manufacturer</span>
-                                            }
                                         </div>
                                     </td>
-                                    <td class="dashboard-uplink-cell">
-                                        @if (client.AvailableWans.Count == 0)
-                                        {
-                                            <span class="table-copy">No live UniFi uplinks detected.</span>
-                                        }
-                                        else
-                                        {
-                                            <form id="@formId" asp-action="UpdateWan" method="post" class="inline-form">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="ClientId" value="@client.ClientId" />
-                                                <select id="uplink-@client.ClientId" name="WanId">
-                                                    @foreach (var uplink in client.AvailableWans)
-                                                    {
-                                                        if (uplink.Id == client.ActiveWanId)
-                                                        {
-                                                            <option value="@uplink.Id" selected="selected">@uplink.Name</option>
-                                                        }
-                                                        else
-                                                        {
-                                                            <option value="@uplink.Id">@uplink.Name</option>
-                                                        }
-                                                    }
-                                                </select>
-                                            </form>
-                                        }
-                                    </td>
                                     <td class="dashboard-action-cell">
-                                        @if (client.AvailableWans.Count > 0)
-                                        {
-                                            <button type="submit" form="@formId" class="action-button action-button-small">
+                                        <form asp-action="Assign" method="post" class="inline-form">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="ClientId" value="@client.Id" />
+                                            <button type="submit" class="action-button action-button-small">
                                                 <span class="action-icon" aria-hidden="true">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                        <path d="M13 5l7 7-7 7"></path>
-                                                        <path d="M5 12h15"></path>
+                                                        <path d="M12 5v14"></path>
+                                                        <path d="M5 12h14"></path>
                                                     </svg>
                                                 </span>
-                                                <span class="action-label">Apply</span>
+                                                <span class="action-label">Add</span>
                                             </button>
-                                        }
+                                        </form>
                                     </td>
                                 </tr>
                             }
@@ -223,15 +198,6 @@
                             </span>
                             <span class="action-label">Next</span>
                         </button>
-                        <a asp-action="AddClient" class="icon-link strong-ghost">
-                            <span class="action-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 5v14"></path>
-                                    <path d="M5 12h14"></path>
-                                </svg>
-                            </span>
-                            <span class="action-label">Add client</span>
-                        </a>
                     </div>
                 </div>
             }

@@ -22,6 +22,13 @@ public sealed class DashboardController : Controller
         return View(model);
     }
 
+    [HttpGet]
+    public async Task<IActionResult> AddClient(CancellationToken cancellationToken)
+    {
+        var model = await _assignmentService.BuildDashboardAsync(User, cancellationToken);
+        return View(model);
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Assign(AssignClientRequest request, CancellationToken cancellationToken)

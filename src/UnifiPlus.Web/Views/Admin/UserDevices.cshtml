@@ -3,19 +3,6 @@
     ViewData["Title"] = "Devices";
 }
 
-<section class="hero-panel">
-    <div>
-        <p class="eyebrow">Administration</p>
-        <h1>User devices</h1>
-        <p class="muted hero-copy">Manage claimed devices, aliases, uplinks and bandwidth for @Model.User.UserId.</p>
-    </div>
-    <div class="hero-badge">
-        <span>User</span>
-        <strong>@Model.User.UserId</strong>
-        <span class="hero-secondary">@Model.User.Role</span>
-    </div>
-</section>
-
 @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
 {
     <div class="@(Model.StatusIsSuccess ? "flash-success" : "flash-error")">@Model.StatusMessage</div>
@@ -56,7 +43,6 @@
                             }
                             <div class="compact-record-meta">
                                 <span>IP: @client.IpAddress</span>
-                                <span>Policy: @client.PolicyName</span>
                                 <span>Current uplink: @client.ActiveWanName</span>
                                 <span>
                                     Limit:

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
@@ -15,6 +16,13 @@ public sealed class UniFiApiClient : IUniFiApiClient
     private readonly UniFiOptions _options;
     private readonly IUniFiConfigurationStore _configurationStore;
     private readonly ILogger<UniFiApiClient> _logger;
+    private const string CurrentRulePrefix = "UP:v1:";
+    private const string LegacyRulePrefix = "UP-";
+    private const string UplinkRuleSuffix = ":WAN";
+    private const string BandwidthRuleSuffix = ":BW";
+    private const string LegacyBandwidthMarker = "| Bandwidth";
+    private const string CurrentRouteDescriptionMarker = "UnifiPlus rule ";
+    private const string LegacyRouteDescriptionMarker = "UnifiPlus route for ";
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public UniFiApiClient(
@@ -220,12 +228,15 @@ public sealed class UniFiApiClient : IUniFiApiClient
             throw new InvalidOperationException("The selected WAN could not be resolved in UniFi.");
         }
 
+        var ruleKey = BuildDeviceRuleKey(clientMetadata);
         var wanDisplayName = ResolveWanDisplayName(wanId, wanNetworks);
-        var routeName = $"{policyName} -> {wanDisplayName}";
-        var routeDescription = $"UnifiPlus route for {policyName} ({clientMetadata.DisplayName}) to {wanDisplayName}";
+        var routeName = BuildUplinkRuleName(ruleKey);
+        var routeDescription = $"{CurrentRouteDescriptionMarker}{routeName} for {clientMetadata.DisplayName} to {wanDisplayName}";
 
         var existingRoute = trafficRoutes.Values.FirstOrDefault(route =>
+            string.Equals(route.PolicyName, routeName, StringComparison.OrdinalIgnoreCase) ||
             string.Equals(route.PolicyName, policyName, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(route.Name, routeName, StringComparison.OrdinalIgnoreCase) ||
             route.TargetDevices.Any(device => string.Equals(device.ClientMac, clientMetadata.MacAddress, StringComparison.OrdinalIgnoreCase)));
 
         var payload = JsonSerializer.Serialize(new
@@ -260,7 +271,7 @@ public sealed class UniFiApiClient : IUniFiApiClient
             {
                 _id = qosRule.Id,
                 enabled = qosRule.Enabled,
-                name = qosRule.Name,
+                name = BuildBandwidthRuleName(ruleKey),
                 wan_or_vpn_network = network.Id,
                 index = qosRule.Index,
                 source = new
@@ -322,7 +333,8 @@ public sealed class UniFiApiClient : IUniFiApiClient
         var wanNetworks = await GetWanNetworkMapAsync(session.Client, session.Site, cancellationToken);
         var trafficRoutes = await GetTrafficRoutesAsync(session.Client, session.Site, wanNetworks, cancellationToken);
         var qosRules = await GetQosRuleMapAsync(session.Client, session.Site, wanNetworks, cancellationToken);
-        var ruleName = BuildBandwidthRuleName(policyName);
+        var ruleKey = BuildDeviceRuleKey(clientMetadata);
+        var ruleName = BuildBandwidthRuleName(ruleKey);
         var existingRule = qosRules.Values.FirstOrDefault(rule =>
             string.Equals(rule.Name, ruleName, StringComparison.OrdinalIgnoreCase) ||
             rule.TargetClientMacs.Any(mac => string.Equals(mac, clientMetadata.MacAddress, StringComparison.OrdinalIgnoreCase)));
@@ -1105,11 +1117,52 @@ public sealed class UniFiApiClient : IUniFiApiClient
         return parts.Length >= 3 ? parts[1] : string.Empty;
     }
 
-    private static string BuildBandwidthRuleName(string policyName)
+    private static string BuildDeviceRuleKey(ClientMetadata metadata)
     {
-        return policyName.StartsWith("UP-", StringComparison.OrdinalIgnoreCase)
-            ? $"{policyName} | Bandwidth"
-            : $"{policyName} | Bandwidth";
+        var source = FirstNonEmpty(metadata.MacAddress, metadata.Id).Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return Guid.NewGuid().ToString("N")[..12].ToUpperInvariant();
+        }
+
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source)))[..12];
+    }
+
+    private static string BuildUplinkRuleName(string ruleKey)
+    {
+        return $"{CurrentRulePrefix}{ruleKey}{UplinkRuleSuffix}";
+    }
+
+    private static string BuildBandwidthRuleName(string ruleKey)
+    {
+        return $"{CurrentRulePrefix}{ruleKey}{BandwidthRuleSuffix}";
+    }
+
+    private static bool IsCurrentUnifiPlusRuleName(string value)
+    {
+        return value.StartsWith(CurrentRulePrefix, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsLegacyUnifiPlusRuleName(string value)
+    {
+        return value.StartsWith(LegacyRulePrefix, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsUnifiPlusRuleName(string value)
+    {
+        return IsCurrentUnifiPlusRuleName(value) || IsLegacyUnifiPlusRuleName(value);
+    }
+
+    private static bool IsCurrentBandwidthRuleName(string value)
+    {
+        return IsCurrentUnifiPlusRuleName(value) &&
+            value.EndsWith(BandwidthRuleSuffix, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsLegacyBandwidthRuleName(string value)
+    {
+        return IsLegacyUnifiPlusRuleName(value) &&
+            value.Contains(LegacyBandwidthMarker, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string ReadString(JsonElement item, params string[] names)
@@ -1444,7 +1497,7 @@ public sealed class UniFiApiClient : IUniFiApiClient
         if (!string.IsNullOrWhiteSpace(routeName))
         {
             var routePrefix = routeName.Split(" -> ", 2, StringSplitOptions.None)[0];
-            if (routePrefix.StartsWith("UP-", StringComparison.OrdinalIgnoreCase))
+            if (IsUnifiPlusRuleName(routePrefix))
             {
                 return routePrefix;
             }
@@ -1452,24 +1505,50 @@ public sealed class UniFiApiClient : IUniFiApiClient
 
         if (!string.IsNullOrWhiteSpace(description))
         {
-            var marker = "UnifiPlus route for ";
-            var start = description.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
-            if (start >= 0)
+            var currentRuleName = ExtractRuleNameAfterMarker(description, CurrentRouteDescriptionMarker);
+            if (!string.IsNullOrWhiteSpace(currentRuleName))
             {
-                var remaining = description[(start + marker.Length)..];
-                var end = remaining.IndexOf(" (", StringComparison.OrdinalIgnoreCase);
-                return end >= 0 ? remaining[..end] : remaining;
+                return currentRuleName;
+            }
+
+            var legacyRuleName = ExtractRuleNameAfterMarker(description, LegacyRouteDescriptionMarker);
+            if (!string.IsNullOrWhiteSpace(legacyRuleName))
+            {
+                return legacyRuleName;
             }
         }
 
         return string.Empty;
     }
 
+    private static string ExtractRuleNameAfterMarker(string value, string marker)
+    {
+        var start = value.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (start < 0)
+        {
+            return string.Empty;
+        }
+
+        var remaining = value[(start + marker.Length)..];
+        var endCandidates = new[]
+        {
+            remaining.IndexOf(" for ", StringComparison.OrdinalIgnoreCase),
+            remaining.IndexOf(" (", StringComparison.OrdinalIgnoreCase)
+        };
+        var end = endCandidates
+            .Where(index => index >= 0)
+            .DefaultIfEmpty(remaining.Length)
+            .Min();
+        var candidate = remaining[..end].Trim();
+        return IsUnifiPlusRuleName(candidate) ? candidate : string.Empty;
+    }
+
     private static bool IsUnifiPlusRoute(TrafficRouteInfo route)
     {
-        return route.PolicyName.StartsWith("UP-", StringComparison.OrdinalIgnoreCase) ||
-            route.Name.StartsWith("UP-", StringComparison.OrdinalIgnoreCase) ||
-            route.Description.StartsWith("UnifiPlus route for UP-", StringComparison.OrdinalIgnoreCase);
+        return IsUnifiPlusRuleName(route.PolicyName) ||
+            IsUnifiPlusRuleName(route.Name) ||
+            !string.IsNullOrWhiteSpace(ExtractRuleNameAfterMarker(route.Description, CurrentRouteDescriptionMarker)) ||
+            !string.IsNullOrWhiteSpace(ExtractRuleNameAfterMarker(route.Description, LegacyRouteDescriptionMarker));
     }
 
     private static string? ResolveBandwidthWanNetworkId(
@@ -1488,8 +1567,7 @@ public sealed class UniFiApiClient : IUniFiApiClient
 
     private static bool IsUnifiPlusQosRule(QosRuleInfo rule)
     {
-        return rule.Name.StartsWith("UP-", StringComparison.OrdinalIgnoreCase) &&
-            rule.Name.Contains("| Bandwidth", StringComparison.OrdinalIgnoreCase);
+        return IsCurrentBandwidthRuleName(rule.Name) || IsLegacyBandwidthRuleName(rule.Name);
     }
 
     private static string FormatBandwidthConfiguration(QosRuleInfo rule, IReadOnlyDictionary<string, WanMapping> wanNetworks)

@@ -3,18 +3,6 @@
     ViewData["Title"] = "Templates";
 }
 
-<section class="hero-panel">
-    <div>
-        <p class="eyebrow">Administration</p>
-        <h1>Bandwidth templates</h1>
-        <p class="muted hero-copy">Manage separate reusable presets for download and upload limits. These values are global for the whole UnifiPlus instance.</p>
-    </div>
-    <div class="hero-badge">
-        <span>Persistent store</span>
-        <strong>@Model.StoragePath</strong>
-    </div>
-</section>
-
 @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
 {
     <div class="@(Model.StatusIsSuccess ? "flash-success" : "flash-error")">@Model.StatusMessage</div>

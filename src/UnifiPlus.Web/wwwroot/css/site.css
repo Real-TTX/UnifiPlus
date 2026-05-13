@@ -11,16 +11,21 @@
     --accent: #73f0ff;
     --border: rgba(115, 240, 255, 0.16);
     --success: #3ddc97;
-    --shadow: 0 24px 64px rgba(0, 0, 0, 0.32);
+    --shadow: 0 12px 32px rgba(0, 0, 0, 0.26);
 }
 
 * {
     box-sizing: border-box;
 }
 
+html {
+    font-size: 14px;
+}
+
 body {
     margin: 0;
     font-family: "Aptos", "Segoe UI", sans-serif;
+    line-height: 1.35;
     color: var(--text);
     background:
         radial-gradient(circle at top left, rgba(0, 200, 255, 0.18), transparent 24%),
@@ -40,7 +45,7 @@ a {
     justify-content: center;
     width: fit-content;
     min-width: 160px;
-    border-radius: 12px;
+    border-radius: 0;
     padding: 0.75rem 1rem;
     background: var(--primary);
     color: #052033;
@@ -107,7 +112,7 @@ a {
     align-items: center;
     gap: 0.9rem;
     padding: 0.95rem 1rem;
-    border-radius: 18px;
+    border-radius: 0;
     color: var(--muted);
     transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
 }
@@ -125,7 +130,7 @@ a {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 10px;
+    border-radius: 0;
     background: rgba(255, 255, 255, 0.06);
     color: var(--accent);
     font-weight: 700;
@@ -174,25 +179,6 @@ a {
     margin: 0 auto;
 }
 
-.hero-panel {
-    display: flex;
-    justify-content: space-between;
-    gap: 1.5rem;
-    padding: 1.6rem 1.75rem;
-    margin-bottom: 1.5rem;
-    border: 1px solid var(--border);
-    border-radius: 28px;
-    background:
-        linear-gradient(135deg, rgba(0, 174, 239, 0.16), rgba(7, 27, 42, 0.88)),
-        rgba(7, 27, 42, 0.9);
-    box-shadow: var(--shadow);
-}
-
-.hero-panel-dashboard {
-    align-items: flex-start;
-    flex-wrap: wrap;
-}
-
 .grid {
     display: grid;
     gap: 1.5rem;
@@ -212,7 +198,7 @@ a {
 .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 26px;
+    border-radius: 0;
     padding: 1.5rem;
     box-shadow: var(--shadow);
 }
@@ -251,7 +237,7 @@ a {
 .card-strip {
     padding: 1.15rem 1.2rem;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
+    border-radius: 0;
     background: rgba(255, 255, 255, 0.03);
 }
 
@@ -271,34 +257,16 @@ a {
     font-size: 0.72rem;
 }
 
-.hero-copy {
-    max-width: 58ch;
-}
-
-.hero-badge {
-    min-width: 180px;
-    align-self: flex-start;
-    padding: 1rem 1.1rem;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.hero-badge span,
 .account-copy small {
     display: block;
     color: var(--muted);
-}
-
-.hero-secondary {
-    margin-top: 0.45rem;
 }
 
 .policy,
 .badge {
     display: inline-flex;
     align-items: center;
-    border-radius: 999px;
+    border-radius: 0;
     background: rgba(0, 174, 239, 0.14);
     color: var(--accent);
     padding: 0.3rem 0.7rem;
@@ -322,10 +290,26 @@ input[type="url"],
 select {
     width: 100%;
     padding: 0.8rem 0.9rem;
-    border-radius: 12px;
+    border-radius: 0;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: rgba(255, 255, 255, 0.06);
     color: var(--text);
+}
+
+select {
+    color-scheme: dark;
+    background-color: #071b2a;
+}
+
+select option,
+select optgroup {
+    background-color: #071b2a;
+    color: var(--text);
+}
+
+select option:checked {
+    background-color: var(--primary-strong);
+    color: #ffffff;
 }
 
 .checkbox-row {
@@ -340,7 +324,7 @@ select {
 
 button {
     border: none;
-    border-radius: 12px;
+    border-radius: 0;
     padding: 0.75rem 1rem;
     background: var(--primary);
     color: #052033;
@@ -384,7 +368,7 @@ button:hover {
 .flash-success {
     margin-bottom: 1rem;
     padding: 0.95rem 1.1rem;
-    border-radius: 18px;
+    border-radius: 0;
     border: 1px solid rgba(61, 220, 151, 0.3);
     background: rgba(61, 220, 151, 0.1);
     color: #b5ffd9;
@@ -393,7 +377,7 @@ button:hover {
 .flash-error {
     margin-bottom: 1rem;
     padding: 0.95rem 1.1rem;
-    border-radius: 18px;
+    border-radius: 0;
     border: 1px solid rgba(255, 145, 145, 0.3);
     background: rgba(255, 145, 145, 0.08);
     color: #ffd7d7;
@@ -401,7 +385,7 @@ button:hover {
 
 .info-panel {
     padding: 0.95rem 1rem;
-    border-radius: 18px;
+    border-radius: 0;
     border: 1px solid rgba(115, 240, 255, 0.16);
     background: rgba(255, 255, 255, 0.04);
 }
@@ -447,7 +431,7 @@ button:hover {
 .wan-pill {
     display: inline-flex;
     align-items: center;
-    border-radius: 999px;
+    border-radius: 0;
     padding: 0.55rem 0.9rem;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -465,7 +449,7 @@ button:hover {
     align-items: center;
     gap: 0.75rem;
     padding: 0.45rem 0.7rem 0.45rem 0.45rem;
-    border-radius: 999px;
+    border-radius: 0;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -493,7 +477,7 @@ button:hover {
     gap: 0.6rem;
     min-height: 44px;
     padding: 0.72rem 1rem;
-    border-radius: 14px;
+    border-radius: 0;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: rgba(255, 255, 255, 0.04);
     color: var(--text);
@@ -561,7 +545,7 @@ button:hover {
     justify-content: space-between;
     gap: 1rem;
     padding: 1rem 1.1rem;
-    border-radius: 20px;
+    border-radius: 0;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.03);
 }
@@ -586,14 +570,14 @@ button:hover {
 
 .surface-note {
     padding: 1rem 1.1rem;
-    border-radius: 18px;
+    border-radius: 0;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.03);
 }
 
 .danger-panel {
     padding: 1rem 1.1rem;
-    border-radius: 20px;
+    border-radius: 0;
     border: 1px solid rgba(255, 145, 145, 0.2);
     background: rgba(255, 145, 145, 0.06);
 }
@@ -622,7 +606,7 @@ button:hover {
 
 .summary-tile {
     padding: 1rem 1.05rem;
-    border-radius: 18px;
+    border-radius: 0;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.03);
 }
@@ -651,7 +635,7 @@ button:hover {
 
 .connection-item {
     padding: 0.95rem 1rem;
-    border-radius: 18px;
+    border-radius: 0;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.03);
 }
@@ -688,7 +672,7 @@ button:hover {
 
 .record-card {
     padding: 1.1rem 1.15rem;
-    border-radius: 22px;
+    border-radius: 0;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.03);
 }
@@ -747,7 +731,7 @@ button:hover {
     display: grid;
     grid-template-columns: 42px minmax(0, 1fr) auto 42px;
     align-items: center;
-    border-radius: 18px;
+    border-radius: 0;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.04);
     overflow: hidden;
@@ -798,7 +782,7 @@ button:hover {
     justify-content: center;
     min-height: 36px;
     padding: 0.55rem 0.85rem;
-    border-radius: 999px;
+    border-radius: 0;
     border: 1px solid rgba(0, 174, 239, 0.22);
     background: rgba(0, 174, 239, 0.08);
     color: #9cefff;
@@ -832,10 +816,6 @@ button:hover {
     margin-top: 1.5rem;
 }
 
-.bandwidth-clients-card {
-    margin-top: 1.5rem;
-}
-
 .section-spaced {
     margin-top: 1.5rem;
 }
@@ -857,7 +837,7 @@ button:hover {
 
 .mini-stat {
     padding: 0.9rem 0.95rem;
-    border-radius: 18px;
+    border-radius: 0;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.03);
 }
@@ -915,7 +895,7 @@ button:hover {
     align-items: center;
     gap: 1rem;
     padding: 1.1rem 1.25rem;
-    border-radius: 24px;
+    border-radius: 0;
     border: 1px solid var(--border);
     background: rgba(7, 27, 42, 0.72);
     box-shadow: var(--shadow);
@@ -940,7 +920,7 @@ button:hover {
 
 .compact-card {
     padding: 1.15rem 1.2rem;
-    border-radius: 22px;
+    border-radius: 0;
 }
 
 .compact-card .section-head {
@@ -968,7 +948,7 @@ button:hover {
 
 .compact-record {
     padding: 0.95rem 1rem;
-    border-radius: 18px;
+    border-radius: 0;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.025);
 }
@@ -1012,7 +992,7 @@ button:hover {
     align-items: center;
     gap: 0.45rem;
     padding: 0.5rem 0.8rem;
-    border-radius: 999px;
+    border-radius: 0;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.04);
     color: var(--text);
@@ -1023,7 +1003,7 @@ button:hover {
     content: "";
     width: 8px;
     height: 8px;
-    border-radius: 50%;
+    border-radius: 0;
     background: rgba(115, 240, 255, 0.55);
 }
 
@@ -1085,7 +1065,7 @@ button:hover {
 
 .table-wrap {
     overflow-x: auto;
-    border-radius: 22px;
+    border-radius: 0;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.025);
 }
@@ -1143,6 +1123,31 @@ button:hover {
     min-width: 940px;
 }
 
+.dashboard-client-table {
+    min-width: 860px;
+}
+
+.dashboard-uplink-cell {
+    min-width: 180px;
+}
+
+.dashboard-action-cell {
+    white-space: nowrap;
+    vertical-align: middle !important;
+    width: 1%;
+}
+
+.dashboard-action-cell .inline-form {
+    display: inline-flex;
+}
+
+.status-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    align-items: flex-start;
+}
+
 .bandwidth-status-stack {
     display: flex;
     flex-direction: column;
@@ -1174,7 +1179,7 @@ button:hover {
 
 .bandwidth-control-panel {
     padding: 0.85rem;
-    border-radius: 16px;
+    border-radius: 0;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.03);
 }
@@ -1224,7 +1229,7 @@ button:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: 0;
     background: linear-gradient(135deg, var(--primary), var(--accent));
     color: #042032;
     font-weight: 800;
@@ -1233,7 +1238,7 @@ button:hover {
 .icon-button {
     width: 44px;
     height: 44px;
-    border-radius: 14px;
+    border-radius: 0;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.08);
     display: inline-flex;
@@ -1247,7 +1252,7 @@ button:hover {
     display: block;
     width: 100%;
     height: 2px;
-    border-radius: 999px;
+    border-radius: 0;
     background: var(--text);
 }
 
@@ -1266,14 +1271,468 @@ button:hover {
     margin-bottom: 1rem;
 }
 
+.sidebar {
+    width: 236px;
+    padding: 0.8rem;
+}
+
+.main-panel {
+    margin-left: 236px;
+}
+
+.sidebar-head {
+    margin-bottom: 1rem;
+}
+
+.brand {
+    font-size: 1.15rem;
+}
+
+.brand-mark,
+.login-logo {
+    width: 32px;
+    height: 32px;
+}
+
+.brand-link,
+.topbar-left,
+.topbar-actions,
+.account-button {
+    gap: 0.55rem;
+}
+
+.nav-list {
+    gap: 0.35rem;
+}
+
+.nav-group-title {
+    margin-top: 0.65rem;
+    padding: 0 0.65rem;
+    font-size: 0.68rem;
+}
+
+.nav-link {
+    gap: 0.55rem;
+    padding: 0.58rem 0.65rem;
+}
+
+.nav-icon {
+    width: 22px;
+    height: 22px;
+    font-size: 0.8rem;
+}
+
+.topbar,
+.login-topbar {
+    padding: 0.6rem 0.9rem;
+}
+
+.page-kicker {
+    font-size: 0.7rem;
+}
+
+.shell {
+    max-width: 1440px;
+    padding: 1rem;
+}
+
+.grid,
+.content-stack,
+.compact-grid,
+.compact-two-up,
+.tab-group {
+    gap: 0.8rem;
+}
+
+.grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.two-up {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+.card,
+.compact-card {
+    padding: 0.9rem;
+}
+
+.narrow {
+    max-width: 420px;
+    margin: 4vh auto;
+}
+
+.stack,
+.compact-form,
+.record-list,
+.compact-record-list,
+.device-catalog {
+    gap: 0.55rem;
+}
+
+.section-head {
+    gap: 0.7rem;
+    margin-bottom: 0.65rem;
+}
+
+.eyebrow {
+    margin-bottom: 0.25rem;
+    font-size: 0.64rem;
+}
+
+h1,
+h2,
+h3,
+p {
+    margin-top: 0;
+}
+
+h1,
+h2,
+h3 {
+    line-height: 1.15;
+}
+
+h1 {
+    font-size: 1.25rem;
+}
+
+h2 {
+    margin-bottom: 0.35rem;
+    font-size: 1.05rem;
+}
+
+h3 {
+    margin-bottom: 0.3rem;
+    font-size: 0.95rem;
+}
+
+p {
+    margin-bottom: 0.55rem;
+}
+
+.card > :last-child,
+.compact-record > :last-child,
+.record-card > :last-child {
+    margin-bottom: 0;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="url"],
+select,
+button {
+    padding: 0.5rem 0.65rem;
+}
+
+.button-link {
+    min-width: 130px;
+    padding: 0.5rem 0.7rem;
+}
+
+.flash-success,
+.flash-error,
+.info-panel,
+.surface-note,
+.danger-panel,
+.card-strip,
+.connection-item,
+.user-row,
+.record-card,
+.compact-record,
+.summary-tile,
+.mini-stat,
+.bandwidth-control-panel {
+    padding: 0.65rem 0.75rem;
+}
+
+.summary-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.55rem;
+    margin-top: 0;
+}
+
+.summary-tile span,
+.record-field label,
+.field-hint,
+.validation-message,
+.table-copy,
+.user-meta,
+.record-meta,
+.compact-record-meta {
+    font-size: 0.82rem;
+}
+
+.summary-tile strong {
+    font-size: 1.05rem;
+}
+
+.dashboard-action-card {
+    min-height: 150px;
+}
+
+.meta-list,
+.connection-list,
+.account-shell {
+    gap: 0.65rem;
+    margin-top: 0.65rem;
+}
+
+.card-actions {
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+    padding-top: 0.7rem;
+}
+
+.action-button,
+.icon-link {
+    gap: 0.4rem;
+    min-height: 34px;
+    padding: 0.42rem 0.65rem;
+}
+
+.action-button-small {
+    min-height: 30px;
+    padding: 0.3rem 0.5rem;
+}
+
+.action-icon {
+    width: 14px;
+    height: 14px;
+}
+
+.badge,
+.policy,
+.wan-pill,
+.template-chip,
+.compact-pill {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.78rem;
+}
+
+.template-chip {
+    min-height: 28px;
+}
+
+.account-button {
+    padding: 0.3rem 0.5rem 0.3rem 0.3rem;
+}
+
+.account-avatar {
+    width: 30px;
+    height: 30px;
+}
+
+.icon-button {
+    width: 34px;
+    height: 34px;
+    gap: 3px;
+    padding: 0 8px;
+}
+
+.device-toolbar {
+    grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(100px, 1fr));
+    gap: 0.55rem;
+}
+
+.data-table {
+    min-width: 660px;
+}
+
+.data-table th,
+.data-table td {
+    padding: 0.55rem 0.65rem;
+}
+
+.data-table th {
+    font-size: 0.7rem;
+}
+
+.bandwidth-client-table {
+    min-width: 820px;
+}
+
+.dashboard-client-table {
+    min-width: 760px;
+}
+
+.bandwidth-grid,
+.bandwidth-control-grid,
+.bandwidth-control-list,
+.template-chip-list,
+.tab-bar,
+.action-toolbar,
+.actions-inline {
+    gap: 0.55rem;
+}
+
+.bandwidth-control-grid {
+    grid-template-columns: repeat(2, minmax(190px, 1fr));
+}
+
+.bandwidth-control-list {
+    min-width: 240px;
+}
+
+.bandwidth-control-panel-compact {
+    min-width: 190px;
+    padding: 0.55rem;
+}
+
+.number-stepper {
+    grid-template-columns: 34px minmax(0, 1fr) auto 34px;
+}
+
+.stepper-button,
+.stepper-input {
+    height: 38px;
+}
+
+.stepper-button {
+    font-size: 1rem;
+}
+
+.stepper-suffix {
+    padding-right: 0.55rem;
+    font-size: 0.8rem;
+}
+
+.account-summary {
+    padding: 0.75rem 0.85rem;
+}
+
+.account-summary-copy h1 {
+    font-size: 1.2rem;
+}
+
+.compact-pill::before {
+    width: 6px;
+    height: 6px;
+}
+
+.home-summary-card {
+    padding: 0.55rem;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent),
+        rgba(7, 27, 42, 0.9);
+}
+
+.home-summary-card .summary-grid {
+    gap: 0.55rem;
+}
+
+.home-summary-card .summary-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0.5rem 0.6rem;
+    border-color: rgba(115, 240, 255, 0.14);
+    background: rgba(255, 255, 255, 0.035);
+    text-align: center;
+}
+
+.summary-label {
+    color: var(--muted);
+    font-size: 0.76rem;
+    line-height: 1.1;
+}
+
+.home-summary-card .summary-tile strong {
+    color: var(--text);
+    margin-top: 0.2rem;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.dashboard-action-card {
+    border-color: rgba(115, 240, 255, 0.12);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent),
+        rgba(8, 27, 42, 0.86);
+}
+
+.dashboard-action-card h2 {
+    margin-bottom: 0.35rem;
+    font-size: 1.05rem;
+}
+
+.dashboard-action-card .muted {
+    line-height: 1.35;
+}
+
+.dashboard-action-card .card-actions {
+    margin-top: 0.65rem;
+}
+
+.card,
+.summary-tile,
+.compact-record,
+.record-card,
+.data-table tbody tr,
+.icon-link,
+.action-button {
+    transition: background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
+}
+
+.card:hover,
+.summary-tile:hover,
+.compact-record:hover,
+.record-card:hover {
+    border-color: rgba(115, 240, 255, 0.24);
+}
+
+.icon-link:focus-visible,
+.action-button:focus-visible,
+.tooltip-tile:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 2px solid rgba(115, 240, 255, 0.7);
+    outline-offset: 2px;
+}
+
+.tooltip-tile {
+    position: relative;
+    cursor: help;
+}
+
+.tooltip-tile::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    z-index: 50;
+    min-width: max-content;
+    max-width: 220px;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid rgba(115, 240, 255, 0.2);
+    background: rgba(4, 16, 26, 0.96);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    font-size: 0.78rem;
+    line-height: 1.25;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -2px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.tooltip-tile:hover::after,
+.tooltip-tile:focus-visible::after {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
 @media (max-width: 720px) {
     .shell {
-        padding: 1rem;
+        padding: 0.75rem;
     }
 
     .topbar,
     .login-topbar {
-        padding: 1rem;
+        padding: 0.6rem 0.75rem;
     }
 
     .client-item {
@@ -1298,7 +1757,6 @@ button:hover {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .hero-panel,
     .section-head {
         flex-direction: column;
         align-items: flex-start;

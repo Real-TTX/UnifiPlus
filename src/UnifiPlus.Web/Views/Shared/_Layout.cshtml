@@ -29,11 +29,11 @@
                         <span class="nav-icon">H</span>
                         <span>Home</span>
                     </a>
-                    <a asp-controller="Dashboard" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : string.Empty)">
+                    <a href="/uplink-switcher" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : string.Empty)">
                         <span class="nav-icon">U</span>
                         <span>Uplink Switcher</span>
                     </a>
-                    <a asp-controller="Bandwidth" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Bandwidth" ? "active" : string.Empty)">
+                    <a href="/bandwidth-limiter" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Bandwidth" ? "active" : string.Empty)">
                         <span class="nav-icon">B</span>
                         <span>Bandwidth Limiter</span>
                     </a>
@@ -65,7 +65,7 @@
             <div class="main-panel">
                 <header class="topbar">
                     <div class="topbar-left">
-                        <button type="button" class="icon-button" data-menu-open aria-label="Open menu">
+                        <button type="button" class="icon-button mobile-only" data-menu-open aria-label="Open menu">
                             <span></span>
                             <span></span>
                             <span></span>

@@ -3,44 +3,25 @@
     ViewData["Title"] = "Home";
 }
 
-<section class="hero-panel hero-panel-dashboard">
-    <div>
-        <p class="eyebrow">Overview</p>
-        <h1>Welcome back, @Model.UserId</h1>
-        <p class="muted hero-copy">Keep an eye on your UniFi uplinks, clients and active rules from one compact dashboard.</p>
-    </div>
-    <div class="hero-badge">
-        <span>Role</span>
-        <strong>@(Model.IsAdmin ? "Administrator" : "User")</strong>
-    </div>
-</section>
-
 <section class="content-stack">
-    <article class="card card-strong">
-        <div class="section-head">
-            <div>
-                <p class="eyebrow">At a glance</p>
-                <h2>Dashboard</h2>
-            </div>
-        </div>
-
+    <article class="card card-strong home-summary-card">
         <div class="summary-grid">
-            <div class="summary-tile">
-                <span>Detected uplinks</span>
+            <div class="summary-tile tooltip-tile" data-tooltip="Detected uplinks: @Model.UplinkCount" tabindex="0" aria-label="Detected uplinks: @Model.UplinkCount">
+                <span class="summary-label">Uplinks</span>
                 <strong>@Model.UplinkCount</strong>
             </div>
-            <div class="summary-tile">
-                <span>My clients</span>
+            <div class="summary-tile tooltip-tile" data-tooltip="My clients: @Model.AssignedClientCount" tabindex="0" aria-label="My clients: @Model.AssignedClientCount">
+                <span class="summary-label">My clients</span>
                 <strong>@Model.AssignedClientCount</strong>
             </div>
-            <div class="summary-tile">
-                <span>All clients</span>
+            <div class="summary-tile tooltip-tile" data-tooltip="All clients: @Model.TotalClientCount" tabindex="0" aria-label="All clients: @Model.TotalClientCount">
+                <span class="summary-label">All clients</span>
                 <strong>@Model.TotalClientCount</strong>
             </div>
             @if (Model.IsAdmin)
             {
-                <div class="summary-tile">
-                    <span>Active rules</span>
+                <div class="summary-tile tooltip-tile" data-tooltip="Active rules: @Model.ActiveRuleCount" tabindex="0" aria-label="Active rules: @Model.ActiveRuleCount">
+                    <span class="summary-label">Rules</span>
                     <strong>@Model.ActiveRuleCount</strong>
                 </div>
             }
@@ -55,7 +36,7 @@
                 <p class="muted">Open your live client views, browse assigned devices and switch them between detected UniFi uplinks.</p>
             </div>
             <div class="card-actions">
-                <a asp-controller="Dashboard" asp-action="Index" class="icon-link strong-ghost">
+                <a href="/uplink-switcher" class="icon-link strong-ghost">
                     <span class="action-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M13 5l7 7-7 7"></path>
@@ -74,7 +55,7 @@
                 <p class="muted">Apply per-client upload and download limits through UniFi bandwidth profiles and keep them visible under Rules.</p>
             </div>
             <div class="card-actions">
-                <a asp-controller="Bandwidth" asp-action="Index" class="icon-link strong-ghost">
+                <a href="/bandwidth-limiter" class="icon-link strong-ghost">
                     <span class="action-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 19V5"></path>

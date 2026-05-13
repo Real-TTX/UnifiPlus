@@ -51,6 +51,25 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStaticFiles();
 
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value ?? string.Empty;
+    if (path.Equals("/dashboard", StringComparison.OrdinalIgnoreCase) ||
+        path.Equals("/dashboard/index", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.Redirect("/uplink-switcher");
+        return;
+    }
+
+    if (path.Equals("/dashboard/addclient", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.Redirect("/uplink-switcher/add-client");
+        return;
+    }
+
+    await next();
+});
+
 app.UseRouting();
 
 app.UseAuthentication();
@@ -96,6 +115,46 @@ app.Use(async (context, next) =>
     await next();
 });
 app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "uplink-switcher-add-client",
+    pattern: "uplink-switcher/add-client",
+    defaults: new { controller = "Dashboard", action = "AddClient" });
+
+app.MapControllerRoute(
+    name: "uplink-switcher-assign",
+    pattern: "uplink-switcher/assign",
+    defaults: new { controller = "Dashboard", action = "Assign" });
+
+app.MapControllerRoute(
+    name: "uplink-switcher-update-wan",
+    pattern: "uplink-switcher/update-wan",
+    defaults: new { controller = "Dashboard", action = "UpdateWan" });
+
+app.MapControllerRoute(
+    name: "uplink-switcher",
+    pattern: "uplink-switcher",
+    defaults: new { controller = "Dashboard", action = "Index" });
+
+app.MapControllerRoute(
+    name: "bandwidth-limiter-add-client",
+    pattern: "bandwidth-limiter/add-client",
+    defaults: new { controller = "Bandwidth", action = "AddClient" });
+
+app.MapControllerRoute(
+    name: "bandwidth-limiter-assign",
+    pattern: "bandwidth-limiter/assign",
+    defaults: new { controller = "Bandwidth", action = "Assign" });
+
+app.MapControllerRoute(
+    name: "bandwidth-limiter-update",
+    pattern: "bandwidth-limiter/update",
+    defaults: new { controller = "Bandwidth", action = "Update" });
+
+app.MapControllerRoute(
+    name: "bandwidth-limiter",
+    pattern: "bandwidth-limiter",
+    defaults: new { controller = "Bandwidth", action = "Index" });
 
 app.MapControllerRoute(
     name: "default",

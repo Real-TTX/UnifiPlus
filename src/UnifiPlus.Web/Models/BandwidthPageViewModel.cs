@@ -8,6 +8,8 @@ public sealed class BandwidthPageViewModel
 
     public IReadOnlyList<AssignedClientViewModel> AssignedClients { get; init; } = [];
 
+    public IReadOnlyList<UniFiClient> AvailableClients { get; init; } = [];
+
     public IReadOnlyList<int> DownloadTemplateValuesMbps { get; init; } = [50, 100, 200];
 
     public IReadOnlyList<int> UploadTemplateValuesMbps { get; init; } = [5, 10, 20];

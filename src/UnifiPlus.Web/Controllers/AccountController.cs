@@ -40,7 +40,7 @@ public sealed class AccountController : Controller
     {
         if (User.Identity?.IsAuthenticated == true)
         {
-            return RedirectToAction("Index", "Dashboard");
+            return Redirect("/uplink-switcher");
         }
 
         if (await _bootstrapService.IsAdminSetupRequiredAsync(cancellationToken))

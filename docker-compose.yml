@@ -17,21 +17,5 @@ services:
       UniFi__ApiKey: change-me
       UniFi__Site: default
 
-  unifiplus-master:
-    image: ${UNIFIPLUS_MASTER_IMAGE:-ghcr.io/real-ttx/unifiplus:latest}
-    container_name: unifiplus-master
-    ports:
-      - "${UNIFIPLUS_MASTER_PORT:-8081}:8080"
-    volumes:
-      - unifiplus-master-data:/data/unifiplus
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_HTTP_PORTS: 8080
-      DataStorage__RootPath: /data/unifiplus
-      UniFi__BaseUrl: https://unifi.local
-      UniFi__ApiKey: change-me
-      UniFi__Site: default
-
 volumes:
   unifiplus-dev-data:
-  unifiplus-master-data:

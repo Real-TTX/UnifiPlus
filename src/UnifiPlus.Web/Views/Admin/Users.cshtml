@@ -3,14 +3,6 @@
     ViewData["Title"] = "Users";
 }
 
-<section class="hero-panel">
-    <div>
-        <p class="eyebrow">Administration</p>
-        <h1>User management</h1>
-        <p class="muted hero-copy">Create local users, manage roles, reset passwords and remove accounts from the persistent UnifiPlus user store.</p>
-    </div>
-</section>
-
 @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
 {
     <div class="@(Model.StatusIsSuccess ? "flash-success" : "flash-error")">@Model.StatusMessage</div>

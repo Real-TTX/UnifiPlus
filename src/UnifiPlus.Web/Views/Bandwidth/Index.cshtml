@@ -3,18 +3,6 @@
     ViewData["Title"] = "Bandwidth Limiter";
 }
 
-<section class="hero-panel hero-panel-dashboard">
-    <div>
-        <p class="eyebrow">Traffic control</p>
-        <h1>Bandwidth Limiter</h1>
-        <p class="muted hero-copy">Apply per-client upload and download limits through visible UniFi QoS rules and reuse global Mbit templates for faster changes.</p>
-    </div>
-    <div class="hero-badge">
-        <span>Managed clients</span>
-        <strong>@Model.AssignedClients.Count</strong>
-    </div>
-</section>
-
 @if (TempData["ActionStatus"] is string actionStatus)
 {
     <div class="flash-success">@actionStatus</div>
@@ -31,130 +19,244 @@
             <p class="eyebrow">Assigned clients</p>
             <h2>Bandwidth profiles</h2>
         </div>
-        @if (Model.IsAdmin)
-        {
-            <a asp-controller="Admin" asp-action="Templates" class="icon-link strong-ghost">
+        <div class="actions-inline">
+            <span class="badge">@Model.AssignedClients.Count</span>
+            <a asp-action="AddClient" class="icon-link strong-ghost">
                 <span class="action-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 20h9"></path>
-                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                        <path d="M12 5v14"></path>
+                        <path d="M5 12h14"></path>
                     </svg>
                 </span>
-                <span class="action-label">Edit templates</span>
+                <span class="action-label">Add client</span>
             </a>
-        }
+            @if (Model.IsAdmin)
+            {
+                <a asp-controller="Admin" asp-action="Templates" class="icon-link strong-ghost">
+                    <span class="action-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                        </svg>
+                    </span>
+                    <span class="action-label">Edit templates</span>
+                </a>
+            }
+        </div>
     </div>
 
-    @if (Model.AssignedClients.Count == 0)
-    {
-        <div class="empty-state">
-            <h3>No assigned UniFi clients available</h3>
-            <p class="muted">Claim a client first before you apply a bandwidth limit.</p>
-        </div>
-    }
-    else
-    {
-        <div class="table-wrap">
-            <table class="data-table bandwidth-client-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Client</th>
-                        <th>Status</th>
-                        <th>Download</th>
-                        <th>Upload</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var client in Model.AssignedClients)
-                    {
-                        var formId = $"bandwidth-form-{client.ClientId}";
-                        <tr>
-                            <td>
-                                <div class="table-title">@(string.IsNullOrWhiteSpace(client.AliasName) ? client.ClientName : client.AliasName)</div>
-                                @if (!string.IsNullOrWhiteSpace(client.AliasName))
-                                {
-                                    <div class="table-copy">Real name: @client.ClientName</div>
-                                }
-                            </td>
-                            <td>
-                                <div class="table-title table-title-tight">@(string.IsNullOrWhiteSpace(client.Hostname) ? "-" : client.Hostname)</div>
-                                <div class="table-copy">IP: @(string.IsNullOrWhiteSpace(client.IpAddress) ? "-" : client.IpAddress)</div>
-                                <div class="table-copy">MAC: @(string.IsNullOrWhiteSpace(client.MacAddress) ? "-" : client.MacAddress)</div>
-                            </td>
-                            <td>
-                                <div class="bandwidth-status-stack">
-                                    <span class="badge">@client.PolicyName</span>
-                                    <span class="table-copy">@(client.IsOnline ? "Online" : "Offline")</span>
-                                    <span class="table-copy">
-                                        @if (client.DownloadLimitMbps.HasValue || client.UploadLimitMbps.HasValue)
-                                        {
-                                            <text>@(client.DownloadLimitMbps.HasValue ? $"{client.DownloadLimitMbps.Value}" : "∞") / @(client.UploadLimitMbps.HasValue ? $"{client.UploadLimitMbps.Value}" : "∞") Mbit</text>
-                                        }
-                                        else
-                                        {
-                                            <text>Unlimited</text>
-                                        }
-                                    </span>
-                                </div>
-                            </td>
-                            <td>
-                                <form id="@formId" asp-action="Update" method="post" class="bandwidth-inline-form">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="ClientId" value="@client.ClientId" />
-                                </form>
+    <div class="device-catalog" data-device-catalog data-page-size="10">
+        <div class="device-toolbar">
+            <label class="device-search">
+                <span class="muted">Search</span>
+                <input type="text" placeholder="Name, hostname, IP, MAC" data-device-search />
+            </label>
 
-                                <div class="bandwidth-control-panel bandwidth-control-panel-compact" data-bandwidth-control>
-                                    <div class="number-stepper">
-                                        <button type="button" class="stepper-button" data-stepper-action="decrease" aria-label="Decrease download limit">-</button>
-                                        <input id="download-@client.ClientId" class="stepper-input" type="number" min="1" step="1" inputmode="numeric" name="DownloadLimitMbps" form="@formId" value="@(client.DownloadLimitMbps?.ToString() ?? string.Empty)" />
-                                        <span class="stepper-suffix">Mbit</span>
-                                        <button type="button" class="stepper-button" data-stepper-action="increase" aria-label="Increase download limit">+</button>
-                                    </div>
-                                    <div class="template-chip-list">
-                                        @foreach (var template in Model.DownloadTemplateValuesMbps)
-                                        {
-                                            <button type="button" class="template-chip" data-template-value="@template">@template</button>
-                                        }
-                                        <button type="button" class="template-chip template-chip-muted" data-template-clear="true">∞</button>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="bandwidth-control-panel bandwidth-control-panel-compact" data-bandwidth-control>
-                                    <div class="number-stepper">
-                                        <button type="button" class="stepper-button" data-stepper-action="decrease" aria-label="Decrease upload limit">-</button>
-                                        <input id="upload-@client.ClientId" class="stepper-input" type="number" min="1" step="1" inputmode="numeric" name="UploadLimitMbps" form="@formId" value="@(client.UploadLimitMbps?.ToString() ?? string.Empty)" />
-                                        <span class="stepper-suffix">Mbit</span>
-                                        <button type="button" class="stepper-button" data-stepper-action="increase" aria-label="Increase upload limit">+</button>
-                                    </div>
-                                    <div class="template-chip-list">
-                                        @foreach (var template in Model.UploadTemplateValuesMbps)
-                                        {
-                                            <button type="button" class="template-chip" data-template-value="@template">@template</button>
-                                        }
-                                        <button type="button" class="template-chip template-chip-muted" data-template-clear="true">∞</button>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="bandwidth-action-cell">
-                                <div class="table-actions">
-                                    <button type="submit" form="@formId" class="action-button">
-                                        <span class="action-icon" aria-hidden="true">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                                <path d="M12 19V5"></path>
-                                                <path d="M5 12l7-7 7 7"></path>
-                                            </svg>
-                                        </span>
-                                        <span class="action-label">Apply</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            <label class="device-filter">
+                <span class="muted">Connection</span>
+                <select data-device-filter="connection">
+                    <option value="all">All</option>
+                    <option value="wired">Wired</option>
+                    <option value="wifi">WiFi</option>
+                    <option value="other">Other</option>
+                </select>
+            </label>
+
+            <label class="device-filter">
+                <span class="muted">Online</span>
+                <select data-device-filter="online">
+                    <option value="all">All</option>
+                    <option value="online">Online</option>
+                    <option value="offline">Offline</option>
+                </select>
+            </label>
+
+            <label class="device-filter device-page-size">
+                <span class="muted">Per page</span>
+                <select data-device-page-size>
+                    <option value="10" selected="selected">10</option>
+                    <option value="20">20</option>
+                    <option value="40">40</option>
+                </select>
+            </label>
         </div>
-    }
+
+        <div class="device-toolbar device-toolbar-secondary">
+            <div class="muted" data-device-count>@Model.AssignedClients.Count client(s)</div>
+        </div>
+
+        @if (Model.AssignedClients.Count == 0)
+        {
+            <div class="empty-state">
+                <h3>No assigned UniFi clients available</h3>
+                <p class="muted">Open Add client to assign a UniFi client before applying bandwidth profiles.</p>
+                <div class="card-actions">
+                    <a asp-action="AddClient" class="icon-link strong-ghost">
+                        <span class="action-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v14"></path>
+                                <path d="M5 12h14"></path>
+                            </svg>
+                        </span>
+                        <span class="action-label">Add client</span>
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="table-wrap" data-device-results>
+                <table class="data-table bandwidth-client-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Client</th>
+                            <th>Status</th>
+                            <th>Download</th>
+                            <th>Upload</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var client in Model.AssignedClients)
+                        {
+                            var connectionType = string.IsNullOrWhiteSpace(client.ConnectionType) ? "other" : client.ConnectionType.ToLowerInvariant();
+                            var formId = $"bandwidth-form-{client.ClientId}";
+                            var search = string.Join(" ", new[]
+                            {
+                                client.ClientName,
+                                client.AliasName ?? string.Empty,
+                                client.Hostname ?? string.Empty,
+                                client.IpAddress ?? string.Empty,
+                                client.MacAddress ?? string.Empty,
+                                client.Manufacturer ?? string.Empty
+                            }.Where(value => !string.IsNullOrWhiteSpace(value))).ToLowerInvariant();
+
+                            <tr data-device-item
+                                data-status="assigned"
+                                data-connection="@connectionType"
+                                data-online="@(client.IsOnline ? "online" : "offline")"
+                                data-search="@search">
+                                <td>
+                                    <div class="table-title">@(string.IsNullOrWhiteSpace(client.AliasName) ? client.ClientName : client.AliasName)</div>
+                                    @if (!string.IsNullOrWhiteSpace(client.AliasName))
+                                    {
+                                        <div class="table-copy">Real name: @client.ClientName</div>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="table-title table-title-tight">@(string.IsNullOrWhiteSpace(client.Hostname) ? "-" : client.Hostname)</div>
+                                    <div class="table-copy">IP: @(string.IsNullOrWhiteSpace(client.IpAddress) ? "-" : client.IpAddress)</div>
+                                    <div class="table-copy">MAC: @(string.IsNullOrWhiteSpace(client.MacAddress) ? "-" : client.MacAddress)</div>
+                                </td>
+                                <td>
+                                    <div class="bandwidth-status-stack">
+                                        <span class="badge">Assigned</span>
+                                        <span class="table-copy">@(client.IsOnline ? "Online" : "Offline")</span>
+                                        @if (!string.IsNullOrWhiteSpace(client.ConnectionType))
+                                        {
+                                            <span class="table-copy">@client.ConnectionType</span>
+                                        }
+                                        <span class="table-copy">
+                                            @if (client.DownloadLimitMbps.HasValue || client.UploadLimitMbps.HasValue)
+                                            {
+                                                <text>@(client.DownloadLimitMbps?.ToString() ?? "No limit") / @(client.UploadLimitMbps?.ToString() ?? "No limit") Mbit</text>
+                                            }
+                                            else
+                                            {
+                                                <text>Unlimited</text>
+                                            }
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <form id="@formId" asp-action="Update" method="post" class="bandwidth-inline-form">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="ClientId" value="@client.ClientId" />
+                                    </form>
+
+                                    <div class="bandwidth-control-panel bandwidth-control-panel-compact" data-bandwidth-control>
+                                        <div class="number-stepper">
+                                            <button type="button" class="stepper-button" data-stepper-action="decrease" aria-label="Decrease download limit">-</button>
+                                            <input id="download-@client.ClientId" class="stepper-input" type="number" min="1" step="1" inputmode="numeric" name="DownloadLimitMbps" form="@formId" value="@(client.DownloadLimitMbps?.ToString() ?? string.Empty)" />
+                                            <span class="stepper-suffix">Mbit</span>
+                                            <button type="button" class="stepper-button" data-stepper-action="increase" aria-label="Increase download limit">+</button>
+                                        </div>
+                                        <div class="template-chip-list">
+                                            @foreach (var template in Model.DownloadTemplateValuesMbps)
+                                            {
+                                                <button type="button" class="template-chip" data-template-value="@template">@template</button>
+                                            }
+                                            <button type="button" class="template-chip template-chip-muted" data-template-clear="true">Clear</button>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="bandwidth-control-panel bandwidth-control-panel-compact" data-bandwidth-control>
+                                        <div class="number-stepper">
+                                            <button type="button" class="stepper-button" data-stepper-action="decrease" aria-label="Decrease upload limit">-</button>
+                                            <input id="upload-@client.ClientId" class="stepper-input" type="number" min="1" step="1" inputmode="numeric" name="UploadLimitMbps" form="@formId" value="@(client.UploadLimitMbps?.ToString() ?? string.Empty)" />
+                                            <span class="stepper-suffix">Mbit</span>
+                                            <button type="button" class="stepper-button" data-stepper-action="increase" aria-label="Increase upload limit">+</button>
+                                        </div>
+                                        <div class="template-chip-list">
+                                            @foreach (var template in Model.UploadTemplateValuesMbps)
+                                            {
+                                                <button type="button" class="template-chip" data-template-value="@template">@template</button>
+                                            }
+                                            <button type="button" class="template-chip template-chip-muted" data-template-clear="true">Clear</button>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="bandwidth-action-cell">
+                                    <div class="table-actions">
+                                        <button type="submit" form="@formId" class="action-button action-button-small">
+                                            <span class="action-icon" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M12 19V5"></path>
+                                                    <path d="M5 12l7-7 7 7"></path>
+                                                </svg>
+                                            </span>
+                                            <span class="action-label">Apply</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-actions">
+                <div class="muted" data-device-page-label>Page 1</div>
+                <div class="actions-inline">
+                    <button type="button" class="icon-link strong-ghost" data-device-prev>
+                        <span class="action-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M15 18l-6-6 6-6"></path>
+                            </svg>
+                        </span>
+                        <span class="action-label">Previous</span>
+                    </button>
+                    <button type="button" class="icon-link strong-ghost" data-device-next>
+                        <span class="action-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"></path>
+                            </svg>
+                        </span>
+                        <span class="action-label">Next</span>
+                    </button>
+                    <a asp-action="AddClient" class="icon-link strong-ghost">
+                        <span class="action-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v14"></path>
+                                <path d="M5 12h14"></path>
+                            </svg>
+                        </span>
+                        <span class="action-label">Add client</span>
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
 </section>

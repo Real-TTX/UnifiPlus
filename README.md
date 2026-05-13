@@ -5,87 +5,74 @@
 ## MVP idea
 
 - Users sign in to the web app.
-- A user sees UniFi clients and assigns devices to themselves.
-- The app stores assignments in UniFi by using a naming convention like `UP-{UserId}-{Index}`.
-- A WAN slider updates a UniFi policy in the background.
+- Users can see UniFi clients and assign devices to themselves.
+- Device ownership is stored through UniFi metadata and naming conventions.
+- A WAN control updates the matching UniFi policy in the background.
 
 ## Project structure
 
 - `src/UnifiPlus.Web`: ASP.NET Core MVC app
+- `docker-compose.yml`: local development container
+- `src/UnifiPlus.Web/Dockerfile`: Docker build for the web app
 
-## Run with Docker
+## Run locally with Docker
+
+Build and start the local development container:
 
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
-This starts two containers:
+This starts one local container:
 
 - `unifiplus-dev`: local development build on [http://localhost:8080](http://localhost:8080)
-- `unifiplus-master`: published GitHub image on [http://localhost:8081](http://localhost:8081)
 
-The local container names are `unifiplus-dev` and `unifiplus-master`.
-
-## Publish To GitHub
-
-The repository now includes a GitHub Actions workflow at `.github/workflows/docker-publish.yml`.
-
-It will automatically:
-
-- build the Docker image on every push to `main`
-- push the image to `ghcr.io`
-- publish a multi-arch image for `linux/amd64` and `linux/arm64`
-- publish `latest` for the default branch
-- publish tag-based versions for Git tags like `v1.0.0`
-- publish a `sha-...` image tag for traceability
-
-The resulting image name is:
-
-```text
-ghcr.io/<owner>/<repo>
-```
-
-Examples:
-
-```text
-ghcr.io/matthias/unifiplus:latest
-ghcr.io/matthias/unifiplus:v1.0.0
-ghcr.io/matthias/unifiplus:sha-abcdef1
-```
-
-To publish it on GitHub:
-
-1. Create a GitHub repository.
-2. Add this project as the remote.
-3. Push the repository to GitHub.
-4. Make sure GitHub Packages is enabled for the repository.
-
-Example:
+Stop the container:
 
 ```bash
-git remote add origin git@github.com:<owner>/<repo>.git
-git branch -M main
-git push -u origin main
+docker compose down
 ```
 
-If you want to override the default images or ports locally, set:
+Reset local development data:
+
+```bash
+docker compose down -v
+```
+
+## Local configuration
+
+The compose file provides development defaults:
+
+- `ASPNETCORE_ENVIRONMENT=Development`
+- `DataStorage__RootPath=/data/unifiplus`
+- `UniFi__BaseUrl=https://unifi.local`
+- `UniFi__ApiKey=change-me`
+- `UniFi__Site=default`
+
+You can override the local image name or port with environment variables:
 
 ```bash
 export UNIFIPLUS_DEV_IMAGE=unifiplus-local:dev
-export UNIFIPLUS_MASTER_IMAGE=ghcr.io/<owner>/<repo>:latest
 export UNIFIPLUS_DEV_PORT=8080
-export UNIFIPLUS_MASTER_PORT=8081
-docker compose up -d
+docker compose up -d --build
+```
+
+On Windows PowerShell:
+
+```powershell
+$env:UNIFIPLUS_DEV_IMAGE = "unifiplus-local:dev"
+$env:UNIFIPLUS_DEV_PORT = "8080"
+docker compose up -d --build
 ```
 
 ## REST API
 
-UnifiPlus now includes a JSON REST API for desktop helpers and tray tools.
+UnifiPlus includes a JSON REST API for desktop helpers and tray tools.
 
 Authentication:
 
-- create an API key in the account page
-- send it as `X-API-Key: <key>` or `Authorization: Bearer <key>`
+- Create an API key in the account page.
+- Send it as `X-API-Key: <key>` or `Authorization: Bearer <key>`.
 
 Endpoints:
 

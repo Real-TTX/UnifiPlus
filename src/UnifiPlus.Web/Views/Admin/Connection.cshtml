@@ -3,18 +3,6 @@
     ViewData["Title"] = "UniFi Connection";
 }
 
-<section class="hero-panel">
-    <div>
-        <p class="eyebrow">Administration</p>
-        <h1>UniFi connection</h1>
-        <p class="muted hero-copy">Review and update the current UniFi connection settings here without leaving the overview.</p>
-    </div>
-    <div class="hero-badge">
-        <span>Persistent store</span>
-        <strong>@Model.StoragePath</strong>
-    </div>
-</section>
-
 @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
 {
     <div class="@(Model.StatusIsSuccess ? "flash-success" : "flash-error")">@Model.StatusMessage</div>

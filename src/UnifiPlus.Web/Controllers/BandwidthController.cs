@@ -22,24 +22,38 @@ public sealed class BandwidthController : Controller
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        var dashboard = await _assignmentService.BuildDashboardAsync(User, cancellationToken);
-        var templates = await _bandwidthTemplateStore.GetAsync(cancellationToken);
-        return View(new BandwidthPageViewModel
+        var model = await BuildPageModelAsync(cancellationToken);
+        return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> AddClient(CancellationToken cancellationToken)
+    {
+        var model = await BuildPageModelAsync(cancellationToken);
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Assign(AssignClientRequest request, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
         {
-            UserId = dashboard.UserId,
-            IsAdmin = dashboard.IsAdmin,
-            AssignedClients = dashboard.AssignedClients,
-            DownloadTemplateValuesMbps = templates.DownloadTemplatesMbps
-                .Where(value => value > 0)
-                .Distinct()
-                .OrderBy(value => value)
-                .ToList(),
-            UploadTemplateValuesMbps = templates.UploadTemplatesMbps
-                .Where(value => value > 0)
-                .Distinct()
-                .OrderBy(value => value)
-                .ToList()
-        });
+            return RedirectToAction(nameof(AddClient));
+        }
+
+        try
+        {
+            await _assignmentService.AssignClientAsync(User, request.ClientId, cancellationToken);
+            TempData["ActionStatus"] = "Device claimed successfully.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            TempData["ActionError"] = ex.Message;
+            return RedirectToAction(nameof(AddClient));
+        }
+
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
@@ -63,5 +77,28 @@ public sealed class BandwidthController : Controller
         }
 
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<BandwidthPageViewModel> BuildPageModelAsync(CancellationToken cancellationToken)
+    {
+        var dashboard = await _assignmentService.BuildDashboardAsync(User, cancellationToken);
+        var templates = await _bandwidthTemplateStore.GetAsync(cancellationToken);
+        return new BandwidthPageViewModel
+        {
+            UserId = dashboard.UserId,
+            IsAdmin = dashboard.IsAdmin,
+            AssignedClients = dashboard.AssignedClients,
+            AvailableClients = dashboard.AllClients,
+            DownloadTemplateValuesMbps = templates.DownloadTemplatesMbps
+                .Where(value => value > 0)
+                .Distinct()
+                .OrderBy(value => value)
+                .ToList(),
+            UploadTemplateValuesMbps = templates.UploadTemplatesMbps
+                .Where(value => value > 0)
+                .Distinct()
+                .OrderBy(value => value)
+                .ToList()
+        };
     }
 }
